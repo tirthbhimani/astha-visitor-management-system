@@ -373,7 +373,7 @@ Ahmedabad, Gujarat
 
 # Developer
 
-Bhimani
+Tirth Bhimani
 
 ---
 
