@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "demo": "astha-visitor-app",
+    "staging": "astha-visitor-app",
+    "default": "astha-visitor-app"
+  },
+  "targets": {},
+  "etags": {}
+}

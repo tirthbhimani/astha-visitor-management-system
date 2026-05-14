@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reminders – Astha VMS</title>
+  <link rel="stylesheet" href="css/main.css"/>
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+
+  <style>
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 9px 20px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Reminder Cards ── */
+    .reminder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+    .reminder-card.overdue  { border-left: 4px solid var(--danger); }
+    .reminder-card.today    { border-left: 4px solid var(--accent); }
+    .reminder-card.upcoming { border-left: 4px solid var(--primary); }
+    .reminder-card.done     { border-left: 4px solid #9E9E9E; opacity: 0.7; }
+
+    .rc-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .rc-icon.overdue  { background: #FFEBEE; }
+    .rc-icon.today    { background: #FFF8E1; }
+    .rc-icon.upcoming { background: #E8F5E9; }
+    .rc-icon.done     { background: #ECEFF1; }
+
+    .rc-body { flex: 1; min-width: 0; }
+    .rc-name { font-weight: 700; font-size: 15px; }
+    .rc-sub  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .rc-date { font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .rc-date.overdue  { color: var(--danger); }
+    .rc-date.today    { color: var(--accent); }
+    .rc-date.upcoming { color: var(--primary); }
+    .rc-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* ── Birthday Cards ── */
+    .birthday-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.2s;
+    }
+    .birthday-card:hover { box-shadow: var(--shadow-md); }
+    .birthday-card.today-bday {
+      background: linear-gradient(135deg, #FFF8E1, #FFFDE7);
+      border-color: var(--accent);
+      border-width: 2px;
+    }
+
+    .bday-avatar-lg {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF8F00, #FFB300);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .bc-body { flex: 1; min-width: 0; }
+    .bc-name { font-weight: 700; font-size: 15px; }
+    .bc-sub  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .bc-day  { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .bc-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+    .today-label {
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── Section header ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 12px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Summary strip ── */
+    .summary-strip {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .summary-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Month filter ── */
+    .month-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .month-btn {
+      padding: 6px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .month-btn.active, .month-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .rc-actions .btn span { display: none; }
+      .bc-actions .btn span { display: none; }
+      .tabs { width: 100%; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader hidden" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- WhatsApp Template Picker Modal (injected by whatsapp.js) -->
+
+<!-- Mark Done Confirm Modal -->
+<div class="modal-overlay hidden" id="doneModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Mark as Completed</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeDoneModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Mark the follow-up for <strong id="doneVisitorName"></strong> as <strong>Completed</strong>?</p>
+      <p style="margin-top:8px; font-size:13px; color:var(--text-muted);">
+        This will update the Work Status to "Completed" in Firestore.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDoneModal()">Cancel</button>
+      <button class="btn btn-primary" id="confirmDoneBtn" onclick="confirmMarkDone()">✅ Mark Completed</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><h2>🏠 Astha Trust</h2><p>Visitor Management</p></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"  class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
+      <a href="visitor-form.html" class="nav-item" id="navAddVisitor"><span class="nav-icon">➕</span> Add Visitor</a>
+      <div class="nav-section-title">Management</div>
+      <a href="reminders.html" class="nav-item active"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <div class="nav-section-title admin-only" id="adminSection">Admin</div>
+      <a href="settings.html" class="nav-item admin-only"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">–</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="topbar-title">Reminders & Birthdays</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Summary Pills -->
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-pill">⏳ Loading...</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" id="tabFollowup" onclick="switchTab('followup')">
+          ⏰ Follow-ups
+          <span class="badge badge-amber" id="followupBadge" style="display:none;"></span>
+        </button>
+        <button class="tab-btn" id="tabBirthday" onclick="switchTab('birthday')">
+          🎂 Birthdays
+          <span class="badge badge-red" id="birthdayBadge" style="display:none;"></span>
+        </button>
+        <button class="tab-btn" id="tabReminders" onclick="switchTab('reminders')">
+          🔔 Reminder Dates
+          <span class="badge badge-blue" id="remindersBadge" style="display:none;"></span>
+        </button>
+      </div>
+
+      <!-- Tab: Follow-ups -->
+      <div class="tab-panel active" id="panelFollowup">
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <select class="filter-select" id="followupFilter" onchange="renderFollowups()" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);min-height:40px;">
+            <option value="all">All Pending</option>
+            <option value="overdue">Overdue Only</option>
+            <option value="today">Due Today</option>
+            <option value="week">This Week</option>
+          </select>
+        </div>
+        <div id="followupList"></div>
+      </div>
+
+      <!-- Tab: Birthdays -->
+      <div class="tab-panel" id="panelBirthday">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          Showing visitors with upcoming birthdays. Filter by month to find anyone.
+        </p>
+        <div class="month-grid" id="monthGrid"></div>
+        <div id="birthdayList"></div>
+      </div>
+
+      <!-- Tab: Reminder Dates -->
+      <div class="tab-panel" id="panelReminders">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          Visitors who have a Reminder Date set — sorted by nearest date first.
+        </p>
+        <div id="remindersList"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- WhatsApp utility -->
+<script src="js/whatsapp.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, getDocs, doc, updateDoc, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let allVisitors    = [];
+  let doneTargetId   = null;
+  let selectedMonth  = null;  // null = all months
+
+  // ── Auth Guard ──────────────────────────────────
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+
+    const role = localStorage.getItem("userRole") || "viewer";
+    const name = localStorage.getItem("userName") || "User";
+    document.getElementById("sidebarUserName").textContent = name;
+    document.getElementById("sidebarUserRole").textContent =
+      role.charAt(0).toUpperCase() + role.slice(1);
+    document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+
+    if (role !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
+    if (role === "viewer") {
+      document.getElementById("navAddVisitor").style.display = "none";
+    }
+
+    loadAll();
+  });
+
+  // ── Load All Data ────────────────────────────────
+  window.loadAll = async function () {
+    showLoader();
+    try {
+      const snap = await getDocs(
+        query(collection(db, "visitors"), orderBy("visitDate", "desc"))
+      );
+      allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      buildSummary();
+      buildMonthGrid();
+      renderFollowups();
+      renderBirthdays();
+      renderReminderDates();
+    } catch (err) {
+      console.error(err);
+      showToast("Error loading data", "error");
+    } finally {
+      hideLoader();
+    }
+  };
+
+  // ── Summary Strip ────────────────────────────────
+  function buildSummary() {
+    const today = stripTime(new Date());
+
+    const overdue   = allVisitors.filter(v => v.followUpDate && v.workStatus === "Pending" && new Date(v.followUpDate) < today).length;
+    const dueToday  = allVisitors.filter(v => v.followUpDate && v.workStatus === "Pending" && isSameDay(new Date(v.followUpDate), today)).length;
+    const bdayToday = allVisitors.filter(v => {
+      if (!v.dateOfBirth) return false;
+      const dob = new Date(v.dateOfBirth);
+      return dob.getMonth() === today.getMonth() && dob.getDate() === today.getDate();
+    }).length;
+    const bdayWeek  = getBirthdaysInRange(7).length;
+
+    document.getElementById("summaryStrip").innerHTML = `
+      ${overdue   > 0 ? `<div class="summary-pill" style="border-color:var(--danger);color:var(--danger);">🚨 ${overdue} Overdue</div>` : ""}
+      ${dueToday  > 0 ? `<div class="summary-pill" style="border-color:var(--accent);color:var(--accent);">📌 ${dueToday} Due Today</div>` : ""}
+      ${bdayToday > 0 ? `<div class="summary-pill" style="border-color:var(--accent);background:#FFF8E1;">🎉 ${bdayToday} Birthday Today!</div>` : ""}
+      <div class="summary-pill">🎂 ${bdayWeek} Birthday${bdayWeek!==1?"s":""} This Week</div>
+      <div class="summary-pill" style="color:var(--text-muted);">📋 ${allVisitors.filter(v=>v.workStatus==="Pending").length} Pending Follow-ups</div>
+    `;
+
+    // Update tab badges
+    const pendingCount = allVisitors.filter(v => v.workStatus === "Pending" && v.followUpDate).length;
+    const badge1 = document.getElementById("followupBadge");
+    badge1.textContent = pendingCount;
+    badge1.style.display = pendingCount ? "" : "none";
+
+    const bdayCount = getBirthdaysInRange(30).length;
+    const badge2 = document.getElementById("birthdayBadge");
+    badge2.textContent = bdayCount;
+    badge2.style.display = bdayCount ? "" : "none";
+
+    const reminderCount = allVisitors.filter(v => v.reminderDate).length;
+    const badge3 = document.getElementById("remindersBadge");
+    badge3.textContent = reminderCount;
+    badge3.style.display = reminderCount ? "" : "none";
+  }
+
+  // ── Follow-ups ────────────────────────────────────
+  window.renderFollowups = function () {
+    const today   = stripTime(new Date());
+    const filter  = document.getElementById("followupFilter").value;
+
+    let list = allVisitors.filter(v =>
+      v.workStatus === "Pending" && v.followUpDate
+    );
+
+    // Apply filter
+    list = list.filter(v => {
+      const date = new Date(v.followUpDate);
+      if (filter === "overdue")  return date < today;
+      if (filter === "today")    return isSameDay(date, today);
+      if (filter === "week") {
+        const weekEnd = new Date(today);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return date >= today && date <= weekEnd;
+      }
+      return true; // all
+    });
+
+    // Sort: overdue first, then by date
+    list.sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+
+    const container = document.getElementById("followupList");
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">✅</div>
+          <h3>No follow-ups found</h3>
+          <p>Try changing the filter or all follow-ups are done!</p>
+        </div>`;
+      return;
+    }
+
+    // Group by: Overdue / Today / Upcoming
+    const overdue  = list.filter(v => new Date(v.followUpDate) < today);
+    const todayL   = list.filter(v => isSameDay(new Date(v.followUpDate), today));
+    const upcoming = list.filter(v => new Date(v.followUpDate) > today);
+
+    let html = "";
+    if (overdue.length)  html += renderFollowupGroup("🚨 Overdue", overdue, "overdue");
+    if (todayL.length)   html += renderFollowupGroup("📌 Due Today", todayL, "today");
+    if (upcoming.length) html += renderFollowupGroup("📅 Upcoming", upcoming, "upcoming");
+
+    container.innerHTML = html;
+  };
+
+  function renderFollowupGroup(label, items, cls) {
+    const cards = items.map(v => {
+      const name  = `${v.firstName||""} ${v.lastName||""}`.trim() || "Unknown";
+      const phone = v.whatsappNumber || v.mobileNumber || "";
+      const date  = new Date(v.followUpDate).toLocaleDateString("en-IN", {
+        weekday: "short", day: "2-digit", month: "short", year: "numeric"
+      });
+      const icons = { overdue:"🚨", today:"📌", upcoming:"📅" };
+
+      return `
+        <div class="reminder-card ${cls}">
+          <div class="rc-icon ${cls}">${icons[cls]}</div>
+          <div class="rc-body">
+            <div class="rc-name">${name}</div>
+            <div class="rc-sub">
+              ${v.visitorType ? `<span class="badge badge-gray" style="font-size:11px;">${v.visitorType}</span>` : ""}
+              &nbsp;${v.purposeOfVisit ? v.purposeOfVisit.substring(0,50)+(v.purposeOfVisit.length>50?"...":"") : ""}
+            </div>
+          </div>
+          <div class="rc-date ${cls}">${date}</div>
+          <div class="rc-actions">
+            ${phone ? `<button class="btn btn-sm" style="background:#25D366;color:#fff;"
+              onclick="showWAModal('${phone}','${name.replace(/'/g,"\\'")}','${(v.purposeOfVisit||"").replace(/'/g,"\\'")}')">
+              💬 <span>WhatsApp</span>
+            </button>` : ""}
+            <button class="btn btn-outline btn-sm"
+              onclick="openDoneModal('${v.id}','${name.replace(/'/g,"\\'")}')">
+              ✅ <span>Done</span>
+            </button>
+            <a href="visitor-detail.html?id=${v.id}" class="btn btn-ghost btn-sm">👁</a>
+          </div>
+        </div>`;
+    }).join("");
+
+    return `<div class="section-label">${label} (${items.length})</div>${cards}`;
+  }
+
+  // ── Birthdays ─────────────────────────────────────
+  function buildMonthGrid() {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const today  = new Date();
+    const grid   = document.getElementById("monthGrid");
+
+    // Count birthdays per month
+    const counts = Array(12).fill(0);
+    allVisitors.forEach(v => {
+      if (v.dateOfBirth) counts[new Date(v.dateOfBirth).getMonth()]++;
+    });
+
+    grid.innerHTML =
+      `<button class="month-btn ${selectedMonth===null?"active":""}" onclick="setMonth(null)">All</button>` +
+      months.map((m, i) =>
+        `<button class="month-btn ${selectedMonth===i?"active":""}" onclick="setMonth(${i})">
+          ${m} ${counts[i] > 0 ? `<span style="font-size:10px;opacity:0.7">(${counts[i]})</span>` : ""}
+        </button>`
+      ).join("");
+  }
+
+  window.setMonth = function (month) {
+    selectedMonth = month;
+    buildMonthGrid();
+    renderBirthdays();
+  };
+
+  function renderBirthdays() {
+    const today  = new Date();
+    const todayM = today.getMonth();
+    const todayD = today.getDate();
+
+    let list = allVisitors.filter(v => v.dateOfBirth);
+
+    if (selectedMonth !== null) {
+      list = list.filter(v => new Date(v.dateOfBirth).getMonth() === selectedMonth);
+    }
+
+    // Add sort key: days until birthday
+    list = list.map(v => {
+      const dob  = new Date(v.dateOfBirth);
+      const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+      let diff = Math.ceil((thisYear - today) / (1000*60*60*24));
+      if (diff < 0) diff += 365; // wrap to next year
+      return { ...v, daysUntil: diff, dobMonth: dob.getMonth(), dobDay: dob.getDate() };
+    });
+
+    list.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    const container = document.getElementById("birthdayList");
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎂</div>
+          <h3>No birthdays found</h3>
+          <p>${selectedMonth !== null ? "No visitors born this month" : "No visitors have date of birth recorded"}</p>
+        </div>`;
+      return;
+    }
+
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+    container.innerHTML = list.map(v => {
+      const name    = `${v.firstName||""} ${v.lastName||""}`.trim() || "Unknown";
+      const initial = name.charAt(0).toUpperCase();
+      const phone   = v.whatsappNumber || v.mobileNumber || "";
+      const isToday = v.daysUntil === 0;
+      const dobDate = new Date(v.dateOfBirth);
+      const age     = today.getFullYear() - dobDate.getFullYear();
+      const dayLabel = isToday
+        ? "🎉 Today!"
+        : v.daysUntil === 1
+        ? "Tomorrow"
+        : v.daysUntil <= 7
+        ? `In ${v.daysUntil} days`
+        : `${dobDate.getDate()} ${monthNames[dobDate.getMonth()]}`;
+
+      return `
+        <div class="birthday-card ${isToday ? "today-bday" : ""}">
+          <div class="bday-avatar-lg">${initial}</div>
+          <div class="bc-body">
+            <div class="bc-name">${name} ${isToday ? '<span class="today-label">🎉 TODAY</span>' : ""}</div>
+            <div class="bc-sub">
+              ${v.mobileNumber||"No mobile"} &nbsp;•&nbsp; ${v.visitorType||"Visitor"}
+              &nbsp;•&nbsp; ${isToday ? `Turning ${age}` : `Born ${dobDate.getDate()} ${monthNames[dobDate.getMonth()]}`}
+            </div>
+          </div>
+          <div class="bc-day" style="color:${isToday?"var(--accent)":"var(--text-secondary)"};">${dayLabel}</div>
+          <div class="bc-actions">
+            ${phone ? `
+              <button class="btn btn-sm" style="background:#25D366;color:#fff;"
+                onclick="openWhatsApp('${phone}','birthday_english','${name.replace(/'/g,"\\'")}')">
+                🎂 EN
+              </button>
+              <button class="btn btn-sm" style="background:#128C7E;color:#fff;"
+                onclick="openWhatsApp('${phone}','birthday_gujarati','${name.replace(/'/g,"\\'")}')">
+                🎂 ગુ
+              </button>
+            ` : `<span style="font-size:12px;color:var(--text-muted);">No number</span>`}
+            <a href="visitor-detail.html?id=${v.id}" class="btn btn-ghost btn-sm">👁</a>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  // ── Reminder Dates ────────────────────────────────
+  function renderReminderDates() {
+    const today = stripTime(new Date());
+
+    let list = allVisitors
+      .filter(v => v.reminderDate)
+      .map(v => ({ ...v, remDate: new Date(v.reminderDate) }))
+      .sort((a, b) => a.remDate - b.remDate);
+
+    const container = document.getElementById("remindersList");
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <h3>No reminder dates set</h3>
+          <p>Add reminder dates when creating or editing a visitor.</p>
+        </div>`;
+      return;
+    }
+
+    const past     = list.filter(v => v.remDate < today);
+    const todayR   = list.filter(v => isSameDay(v.remDate, today));
+    const futureR  = list.filter(v => v.remDate > today);
+
+    function renderGroup(label, items, cls) {
+      if (!items.length) return "";
+      const cards = items.map(v => {
+        const name  = `${v.firstName||""} ${v.lastName||""}`.trim() || "Unknown";
+        const phone = v.whatsappNumber || v.mobileNumber || "";
+        const dateStr = v.remDate.toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+        return `
+          <div class="reminder-card ${cls}">
+            <div class="rc-icon ${cls}">🔔</div>
+            <div class="rc-body">
+              <div class="rc-name">${name}</div>
+              <div class="rc-sub">${v.visitorType||""} &nbsp;•&nbsp; ${v.purposeOfVisit||"–"}</div>
+            </div>
+            <div class="rc-date ${cls}">${dateStr}</div>
+            <div class="rc-actions">
+              ${phone ? `<button class="btn btn-sm" style="background:#25D366;color:#fff;"
+                onclick="showWAModal('${phone}','${name.replace(/'/g,"\\'")}','${(v.purposeOfVisit||"").replace(/'/g,"\\'")}')">
+                💬 <span>WhatsApp</span></button>` : ""}
+              <a href="visitor-detail.html?id=${v.id}" class="btn btn-ghost btn-sm">👁</a>
+            </div>
+          </div>`;
+      }).join("");
+      return `<div class="section-label">${label} (${items.length})</div>${cards}`;
+    }
+
+    container.innerHTML =
+      renderGroup("📌 Due Today",    todayR, "today") +
+      renderGroup("🚨 Past Due",     past,   "overdue") +
+      renderGroup("📅 Upcoming",     futureR,"upcoming");
+  }
+
+  // ── Mark Done Modal ──────────────────────────────
+  window.openDoneModal = function (id, name) {
+    doneTargetId = id;
+    document.getElementById("doneVisitorName").textContent = name;
+    document.getElementById("doneModal").classList.remove("hidden");
+  };
+  window.closeDoneModal = function () {
+    doneTargetId = null;
+    document.getElementById("doneModal").classList.add("hidden");
+  };
+  window.confirmMarkDone = async function () {
+    if (!doneTargetId) return;
+    const btn = document.getElementById("confirmDoneBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Saving...`;
+    try {
+      await updateDoc(doc(db, "visitors", doneTargetId), {
+        workStatus: "Completed",
+        completedAt: new Date().toISOString()
+      });
+      // Update local list
+      const idx = allVisitors.findIndex(v => v.id === doneTargetId);
+      if (idx !== -1) allVisitors[idx].workStatus = "Completed";
+      closeDoneModal();
+      buildSummary();
+      renderFollowups();
+      showToast("Marked as Completed ✅", "success");
+    } catch (err) {
+      showToast("Update failed: " + err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "✅ Mark Completed";
+    }
+  };
+
+  // ── Tab Switching ────────────────────────────────
+  window.switchTab = function (tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(`tab${capitalize(tab)}`).classList.add("active");
+    document.getElementById(`panel${capitalize(tab)}`).classList.add("active");
+  };
+
+  // ── Helpers ──────────────────────────────────────
+  function getBirthdaysInRange(days) {
+    const today = new Date();
+    return allVisitors.filter(v => {
+      if (!v.dateOfBirth) return false;
+      const dob = new Date(v.dateOfBirth);
+      const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+      const diff = Math.ceil((thisYear - today) / (1000*60*60*24));
+      return diff >= 0 && diff <= days;
+    });
+  }
+
+  function stripTime(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function isSameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth()    === b.getMonth() &&
+           a.getDate()     === b.getDate();
+  }
+
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function showLoader() { document.getElementById("pageLoader").classList.remove("hidden"); }
+  function hideLoader() { document.getElementById("pageLoader").classList.add("hidden"); }
+
+  window.handleLogout = async function () {
+    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+  };
+  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
+  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+</script>
+
+<script>
+  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  function showToast(msg, type="info", dur=4000) {
+    const c=document.getElementById("toastContainer"),t=document.createElement("div");
+    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
+    t.className=`toast ${type}`;t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);setTimeout(()=>t.remove(),dur);
+  }
+</script>
+
+<!-- PWA Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
+        .catch(err => console.warn("[PWA] SW registration failed:", err));
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astha Visitor Management - Login</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+
+</head>
+<body>
+
+<!-- Page Loader -->
+<div class="page-loader" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="auth-page">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🏠</div>
+      <h1>Astha Charitable Trust</h1>
+      <p>Visitor Management System</p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginView">
+      <h2 class="auth-title">Welcome Back</h2>
+      <p class="auth-subtitle">Sign in to your account</p>
+
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email Address</label>
+        <input
+          type="email"
+          id="loginEmail"
+          class="form-control"
+          placeholder="your@email.com"
+          autocomplete="email"
+        />
+        <span class="form-error hidden" id="emailError"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <div class="password-wrapper">
+          <input
+            type="password"
+            id="loginPassword"
+            class="form-control"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <button class="password-toggle" onclick="togglePassword('loginPassword', this)" type="button">
+            👁
+          </button>
+        </div>
+        <span class="form-error hidden" id="passwordError"></span>
+      </div>
+
+      <div style="text-align:right; margin-bottom:20px;">
+        <a href="#" class="auth-link" onclick="showForgot()">Forgot Password?</a>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" id="loginBtn" onclick="handleLogin()">
+        Sign In
+      </button>
+
+      <div class="auth-footer-text">
+        Astha Sneh Nu Ghar &nbsp;•&nbsp; v1.0.0
+      </div>
+    </div>
+
+    <!-- Forgot Password -->
+    <div id="forgotView" class="hidden">
+      <button class="btn btn-ghost btn-sm" onclick="showLogin()" style="margin-bottom:16px; padding-left:0;">
+        ← Back to Login
+      </button>
+
+      <h2 class="auth-title">Reset Password</h2>
+      <p class="auth-subtitle">Enter your email to receive a reset link</p>
+
+      <div class="form-group">
+        <label class="form-label" for="resetEmail">Email Address</label>
+        <input
+          type="email"
+          id="resetEmail"
+          class="form-control"
+          placeholder="your@email.com"
+        />
+        <span class="form-error hidden" id="resetEmailError"></span>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="resetBtn" onclick="handleForgotPassword()">
+        Send Reset Link
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── Firebase Config ──────────────────────────────
+  // Replace with YOUR actual Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // ── Check if already logged in ───────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      await redirectByRole(user.uid);
+    } else {
+      hideLoader();
+    }
+  });
+
+  // ── Redirect based on role ───────────────────────
+  async function redirectByRole(uid) {
+    try {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        localStorage.setItem("userRole", snap.data().role);
+        localStorage.setItem("userName", snap.data().name);
+        localStorage.setItem("userUID",  uid);
+        window.location.href = "dashboard.html";
+      } else {
+        showToast("User profile not found. Contact admin.", "error");
+        await auth.signOut();
+        hideLoader();
+      }
+    } catch (err) {
+      showToast("Error loading user data.", "error");
+      hideLoader();
+    }
+  }
+
+  // ── Login ────────────────────────────────────────
+  window.handleLogin = async function () {
+    const email    = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    clearErrors();
+
+    // Validate
+    let hasError = false;
+    if (!email) {
+      showFieldError("emailError", "Email is required");
+      hasError = true;
+    } else if (!isValidEmail(email)) {
+      showFieldError("emailError", "Enter a valid email address");
+      hasError = true;
+    }
+    if (!password) {
+      showFieldError("passwordError", "Password is required");
+      hasError = true;
+    }
+    if (hasError) return;
+
+    setBtnLoading("loginBtn", true, "Signing in...");
+    showLoader();
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await redirectByRole(cred.user.uid);
+    } catch (err) {
+      hideLoader();
+      setBtnLoading("loginBtn", false, "Sign In");
+      switch (err.code) {
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          showFieldError("emailError", "Invalid email or password");
+          break;
+        case "auth/too-many-requests":
+          showToast("Too many failed attempts. Try again later.", "error");
+          break;
+        default:
+          showToast("Login failed. Please try again.", "error");
+      }
+    }
+  };
+
+  // ── Forgot Password ──────────────────────────────
+  window.handleForgotPassword = async function () {
+    const email = document.getElementById("resetEmail").value.trim();
+    clearErrors();
+
+    if (!email) {
+      showFieldError("resetEmailError", "Email is required");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      showFieldError("resetEmailError", "Enter a valid email address");
+      return;
+    }
+
+    setBtnLoading("resetBtn", true, "Sending...");
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast("Reset link sent! Check your email.", "success");
+      setBtnLoading("resetBtn", false, "Send Reset Link");
+      setTimeout(showLogin, 2000);
+    } catch (err) {
+      setBtnLoading("resetBtn", false, "Send Reset Link");
+      if (err.code === "auth/user-not-found") {
+        showFieldError("resetEmailError", "No account found with this email");
+      } else {
+        showToast("Failed to send reset email.", "error");
+      }
+    }
+  };
+
+  // ── UI Helpers ───────────────────────────────────
+  window.showForgot = function () {
+    document.getElementById("loginView").classList.add("hidden");
+    document.getElementById("forgotView").classList.remove("hidden");
+    clearErrors();
+  };
+
+  window.showLogin = function () {
+    document.getElementById("forgotView").classList.add("hidden");
+    document.getElementById("loginView").classList.remove("hidden");
+    clearErrors();
+  };
+
+  window.togglePassword = function (inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+      input.type = "text";
+      btn.textContent = "🙈";
+    } else {
+      input.type = "password";
+      btn.textContent = "👁";
+    }
+  };
+
+  function showLoader()  { document.getElementById("pageLoader").classList.remove("hidden"); }
+  function hideLoader()  { document.getElementById("pageLoader").classList.add("hidden"); }
+
+  function setBtnLoading(id, loading, text) {
+    const btn = document.getElementById(id);
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? `<span class="spinner"></span> ${text}`
+      : text;
+  }
+
+  function showFieldError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    const input = el.previousElementSibling?.tagName === "INPUT"
+      ? el.previousElementSibling
+      : el.closest(".form-group")?.querySelector(".form-control");
+    if (input) input.classList.add("error");
+  }
+
+  function clearErrors() {
+    document.querySelectorAll(".form-error").forEach(el => {
+      el.classList.add("hidden");
+      el.textContent = "";
+    });
+    document.querySelectorAll(".form-control").forEach(el => {
+      el.classList.remove("error");
+    });
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // Enter key support
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      if (!document.getElementById("forgotView").classList.contains("hidden")) {
+        handleForgotPassword();
+      } else {
+        handleLogin();
+      }
+    }
+  });
+</script>
+
+<!-- Toast system (shared across all pages) -->
+<script>
+  function showToast(message, type = "info", duration = 4000) {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type] || "ℹ️"}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+
+  // Add .hidden utility
+  document.head.insertAdjacentHTML("beforeend", "<style>.hidden{display:none!important}</style>");
+</script>
+
+
+<!-- PWA Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
+        .catch(err => console.warn("[PWA] SW registration failed:", err));
+    });
+  }
+</script>
+
+</body>
+</html>

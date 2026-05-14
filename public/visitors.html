@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visitors – Astha VMS</title>
+  <link rel="stylesheet" href="css/main.css"/>
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+
+  <style>
+    .filters-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .filters-bar .search-box input { width: 200px; }
+    .filter-select {
+      padding: 9px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--text-primary);
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .filter-select:focus { outline: none; border-color: var(--primary); }
+
+    .visitor-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .visitor-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+    .vc-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .vc-body { flex: 1; min-width: 0; }
+    .vc-name { font-weight: 700; font-size: 15px; }
+    .vc-sub  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .vc-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .vc-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .visitors-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .page-info { font-size: 13px; color: var(--text-muted); }
+
+    .delete-confirm-body p { margin-bottom: 12px; }
+    .delete-confirm-body .warn { color: var(--danger); font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .filters-bar { flex-direction: column; align-items: stretch; }
+      .filters-bar .search-box { width: 100%; }
+      .filters-bar .search-box input { width: 100%; }
+      .vc-actions .btn span { display: none; }
+    }
+  </style>
+
+  
+</head>
+<body>
+
+<div class="page-loader hidden" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Delete Visitor</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body delete-confirm-body">
+      <p>Are you sure you want to delete <strong id="deleteVisitorName"></strong>?</p>
+      <p class="warn">⚠️ This action cannot be undone. All visitor data will be permanently removed.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-layout">
+  <!-- Sidebar (same structure as dashboard) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>🏠 Astha Trust</h2>
+      <p>Visitor Management</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="visitors.html" class="nav-item active">
+        <span class="nav-icon">👥</span> Visitors
+      </a>
+      <a href="visitor-form.html" class="nav-item" id="navAddVisitor">
+        <span class="nav-icon">➕</span> Add Visitor
+      </a>
+      <div class="nav-section-title">Management</div>
+      <a href="reminders.html" class="nav-item">
+        <span class="nav-icon">🔔</span> Reminders
+      </a>
+      <a href="analytics.html" class="nav-item">
+        <span class="nav-icon">📈</span> Analytics
+      </a>
+      <div class="nav-section-title admin-only" id="adminSection">Admin</div>
+      <a href="settings.html" class="nav-item admin-only">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">–</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">
+        🚪 Sign Out
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="topbar-title">Visitors</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" id="topAddBtn"
+          onclick="window.location.href='visitor-form.html'">
+          + Add Visitor
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-box" style="flex:1; min-width:200px;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search by name or mobile..."
+            oninput="applyFilters()"/>
+        </div>
+        <select class="filter-select" id="filterType" onchange="applyFilters()">
+          <option value="">All Types</option>
+          <option>Donor</option>
+          <option>General Visitor</option>
+          <option>Volunteer</option>
+          <option>Parent Inquiry</option>
+          <option>Sponsor</option>
+          <option>Event Visitor</option>
+          <option>Special Child Inquiry</option>
+        </select>
+        <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+          <option value="">All Status</option>
+          <option>Pending</option>
+          <option>In Progress</option>
+          <option>Completed</option>
+          <option>Rejected</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
+        <span class="page-info" id="resultCount"></span>
+      </div>
+
+      <!-- Visitor List -->
+      <div id="visitorsContainer">
+        <div class="empty-state">
+          <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, getDocs, doc, deleteDoc,
+    query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let allVisitors  = [];
+  let filteredList = [];
+  let currentPage  = 1;
+  const PAGE_SIZE  = 15;
+  let deleteTargetId = null;
+  let userRole = "viewer";
+
+  // ── Auth Guard ──────────────────────────────────
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+    userRole = localStorage.getItem("userRole") || "viewer";
+    initPage();
+    loadVisitors();
+  });
+
+  function initPage() {
+    const name = localStorage.getItem("userName") || "User";
+    document.getElementById("sidebarUserName").textContent = name;
+    document.getElementById("sidebarUserRole").textContent =
+      userRole.charAt(0).toUpperCase() + userRole.slice(1);
+    document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+
+    if (userRole !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
+    if (userRole === "viewer") {
+      document.getElementById("navAddVisitor").style.display = "none";
+      document.getElementById("topAddBtn").style.display = "none";
+    }
+
+    // Pre-fill search from URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search")) {
+      document.getElementById("searchInput").value = params.get("search");
+    }
+  }
+
+  // ── Load All Visitors ───────────────────────────
+  async function loadVisitors() {
+    try {
+      const q    = query(collection(db, "visitors"), orderBy("visitDate", "desc"));
+      const snap = await getDocs(q);
+      allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      applyFilters();
+    } catch (err) {
+      console.error(err);
+      showToast("Error loading visitors", "error");
+      document.getElementById("visitorsContainer").innerHTML =
+        `<div class="empty-state"><p style="color:var(--danger)">Failed to load data. Check console.</p></div>`;
+    }
+  }
+
+  // ── Filter & Search ─────────────────────────────
+  window.applyFilters = function () {
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+    const type   = document.getElementById("filterType").value;
+    const status = document.getElementById("filterStatus").value;
+
+    filteredList = allVisitors.filter(v => {
+      const name   = `${v.firstName||""} ${v.middleName||""} ${v.lastName||""}`.toLowerCase();
+      const mobile = (v.mobileNumber || "").toLowerCase();
+      const matchSearch = !search || name.includes(search) || mobile.includes(search);
+      const matchType   = !type   || v.visitorType === type;
+      const matchStatus = !status || v.workStatus  === status;
+      return matchSearch && matchType && matchStatus;
+    });
+
+    currentPage = 1;
+    renderPage();
+  };
+
+  window.clearFilters = function () {
+    document.getElementById("searchInput").value  = "";
+    document.getElementById("filterType").value   = "";
+    document.getElementById("filterStatus").value = "";
+    applyFilters();
+  };
+
+  // ── Render Page ─────────────────────────────────
+  function renderPage() {
+    const total  = filteredList.length;
+    const start  = (currentPage - 1) * PAGE_SIZE;
+    const end    = Math.min(start + PAGE_SIZE, total);
+    const page   = filteredList.slice(start, end);
+
+    document.getElementById("resultCount").textContent =
+      total > 0 ? `${total} visitor${total !== 1 ? "s" : ""}` : "";
+
+    const container = document.getElementById("visitorsContainer");
+
+    if (page.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <h3>No visitors found</h3>
+          <p>Try changing your search or filters</p>
+          ${userRole !== "viewer" ? `<a href="visitor-form.html" class="btn btn-primary" style="margin-top:16px;">+ Add First Visitor</a>` : ""}
+        </div>`;
+      document.getElementById("pagination").innerHTML = "";
+      return;
+    }
+
+    const typeColors = {
+      "Donor":"badge-amber","Volunteer":"badge-green","Parent Inquiry":"badge-blue",
+      "General Visitor":"badge-gray","Sponsor":"badge-purple",
+      "Event Visitor":"badge-green","Special Child Inquiry":"badge-red"
+    };
+    const statusColors = {
+      "Pending":"badge-amber","In Progress":"badge-blue",
+      "Completed":"badge-green","Rejected":"badge-red"
+    };
+
+    container.innerHTML = `<div class="visitors-grid">` +
+      page.map(v => {
+        const name    = `${v.firstName||""} ${v.lastName||""}`.trim() || "Unknown";
+        const initial = name.charAt(0).toUpperCase();
+        const tColor  = typeColors[v.visitorType]  || "badge-gray";
+        const sColor  = statusColors[v.workStatus] || "badge-gray";
+        const date    = v.visitDate
+          ? new Date(v.visitDate).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})
+          : "–";
+        const canEdit   = userRole === "admin" || userRole === "editor";
+        const canDelete = userRole === "admin";
+
+        return `
+          <div class="visitor-card" onclick="window.location.href='visitor-detail.html?id=${v.id}'">
+            <div class="vc-avatar">${initial}</div>
+            <div class="vc-body">
+              <div class="vc-name">${name}</div>
+              <div class="vc-sub">${v.mobileNumber || "No mobile"} &nbsp;•&nbsp; ${date}</div>
+              <div class="vc-meta">
+                <span class="badge ${tColor}">${v.visitorType || "–"}</span>
+                ${v.workStatus ? `<span class="badge ${sColor}">${v.workStatus}</span>` : ""}
+                ${v.purposeOfVisit ? `<span style="font-size:12px;color:var(--text-muted);">📋 ${v.purposeOfVisit.substring(0,40)}${v.purposeOfVisit.length>40?"...":""}</span>` : ""}
+              </div>
+            </div>
+            <div class="vc-actions" onclick="event.stopPropagation()">
+              ${canEdit ? `<a href="visitor-form.html?id=${v.id}" class="btn btn-outline btn-sm">✏️ <span>Edit</span></a>` : ""}
+              ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="openDeleteModal('${v.id}','${name.replace(/'/g,"\\'")}')">🗑️</button>` : ""}
+            </div>
+          </div>`;
+      }).join("") + `</div>`;
+
+    renderPagination(total);
+  }
+
+  function renderPagination(total) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    const pag   = document.getElementById("pagination");
+    if (pages <= 1) { pag.innerHTML = ""; return; }
+
+    let html = `<button class="btn btn-ghost btn-sm" onclick="goPage(${currentPage-1})" ${currentPage===1?"disabled":""}>← Prev</button>`;
+    for (let i = 1; i <= pages; i++) {
+      if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
+        html += `<button class="btn ${i===currentPage?"btn-primary":"btn-ghost"} btn-sm" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 2) {
+        html += `<span style="color:var(--text-muted)">…</span>`;
+      }
+    }
+    html += `<button class="btn btn-ghost btn-sm" onclick="goPage(${currentPage+1})" ${currentPage===pages?"disabled":""}>Next →</button>`;
+    pag.innerHTML = html;
+  }
+
+  window.goPage = function (p) {
+    const pages = Math.ceil(filteredList.length / PAGE_SIZE);
+    if (p < 1 || p > pages) return;
+    currentPage = p;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ── Delete Modal ────────────────────────────────
+  window.openDeleteModal = function (id, name) {
+    deleteTargetId = id;
+    document.getElementById("deleteVisitorName").textContent = name;
+    document.getElementById("deleteModal").classList.remove("hidden");
+  };
+
+  window.closeDeleteModal = function () {
+    deleteTargetId = null;
+    document.getElementById("deleteModal").classList.add("hidden");
+  };
+
+  window.confirmDelete = async function () {
+    if (!deleteTargetId) return;
+    const btn = document.getElementById("confirmDeleteBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Deleting...`;
+    try {
+      await deleteDoc(doc(db, "visitors", deleteTargetId));
+      allVisitors = allVisitors.filter(v => v.id !== deleteTargetId);
+      applyFilters();
+      closeDeleteModal();
+      showToast("Visitor deleted successfully", "success");
+    } catch (err) {
+      showToast("Delete failed: " + err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = "Delete Permanently";
+    }
+  };
+
+  // ── Logout + Sidebar ────────────────────────────
+  window.handleLogout = async function () {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = "index.html";
+  };
+  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
+  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+</script>
+
+<script>
+  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  function showToast(msg, type="info", dur=4000) {
+    const c = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    const icons = {success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(), dur);
+  }
+</script>
+
+<!-- PWA Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
+        .catch(err => console.warn("[PWA] SW registration failed:", err));
+    });
+  }
+</script>
+
+</body>
+</html>

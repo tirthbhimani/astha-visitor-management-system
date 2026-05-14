@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings – Astha VMS</title>
+  <link rel="stylesheet" href="css/main.css"/>
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+
+  <style>
+    .settings-page { max-width: 720px; margin: 0 auto; }
+    .settings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .settings-section-title {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--primary);
+      background: #F1F8E9;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-info { flex: 1; }
+    .settings-row-label { font-weight: 600; font-size: 14px; }
+    .settings-row-desc  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* User table */
+    .user-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .user-table th {
+      background: var(--surface-2);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .user-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .user-table tr:last-child td { border-bottom: none; }
+
+    /* Add user form */
+    .add-user-form {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+      display: none;
+    }
+    .add-user-form.open { display: block; }
+    .add-user-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .settings-row { flex-direction: column; align-items: flex-start; }
+      .add-user-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader hidden" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><h2>🏠 Astha Trust</h2><p>Visitor Management</p></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"     class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
+      <a href="visitor-form.html" class="nav-item"><span class="nav-icon">➕</span> Add Visitor</a>
+      <div class="nav-section-title">Management</div>
+      <a href="reminders.html"    class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html"    class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <div class="nav-section-title">Admin</div>
+      <a href="settings.html"     class="nav-item active"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">–</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()"
+        style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="topbar-title">Settings</span>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="settings-page">
+
+        <!-- Organization Info -->
+        <div class="settings-section">
+          <div class="settings-section-title">🏠 Organization Information</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Organization Name</div>
+              <div class="settings-row-desc">Displayed across the app</div>
+            </div>
+            <div style="font-weight:600; color:var(--text-primary);">Astha Charitable Trust</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Also Known As</div>
+            </div>
+            <div style="color:var(--text-secondary);">Astha Sneh Nu Ghar</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">App Version</div>
+            </div>
+            <span class="badge badge-green">v1.0.0</span>
+          </div>
+        </div>
+
+        <!-- Logged-in User -->
+        <div class="settings-section">
+          <div class="settings-section-title">👤 My Account</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label" id="myName">–</div>
+              <div class="settings-row-desc" id="myEmail">–</div>
+            </div>
+            <span class="badge" id="myRoleBadge">–</span>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Change Password</div>
+              <div class="settings-row-desc">Send a password reset link to your email</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="sendPasswordReset()">
+              Send Reset Link
+            </button>
+          </div>
+        </div>
+
+        <!-- User Management (Admin only) -->
+        <div class="settings-section" id="userMgmtSection">
+          <div class="settings-section-title">
+            👥 User Management
+            <button class="btn btn-primary btn-sm" style="margin-left:auto;"
+              onclick="toggleAddUserForm()">+ Add User</button>
+          </div>
+
+          <!-- Add User Form -->
+          <div class="add-user-form" id="addUserForm">
+            <div class="add-user-grid">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" id="newUserName" class="form-control" placeholder="Staff name"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" id="newUserEmail" class="form-control" placeholder="staff@email.com"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Password *</label>
+                <input type="password" id="newUserPassword" class="form-control" placeholder="Min 6 characters"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Role *</label>
+                <select id="newUserRole" class="form-control">
+                  <option value="editor">Editor</option>
+                  <option value="viewer">Viewer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary" id="createUserBtn" onclick="createUser()">
+                Create User
+              </button>
+              <button class="btn btn-ghost" onclick="toggleAddUserForm()">Cancel</button>
+            </div>
+          </div>
+
+          <!-- User List -->
+          <div style="overflow-x:auto;">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody">
+                <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">
+                  <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="settings-section">
+          <div class="settings-section-title">🗄️ Data Management</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Export All Data</div>
+              <div class="settings-row-desc">Download complete visitor database as Excel</div>
+            </div>
+            <button class="btn btn-outline btn-sm"
+              onclick="window.location.href='analytics.html'">
+              📊 Go to Export
+            </button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Total Records</div>
+              <div class="settings-row-desc">Visitors currently in the database</div>
+            </div>
+            <span style="font-weight:700; font-size:1.2rem; color:var(--primary);" id="totalRecords">–</span>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="settings-section">
+          <div class="settings-section-title">ℹ️ About</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Astha Visitor Management System</div>
+              <div class="settings-row-desc">Built for Astha Charitable Trust (Astha Sneh Nu Ghar)</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Tech Stack</div>
+              <div class="settings-row-desc">Devloped by Tirth Bhimani</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Support Languages</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <span class="badge badge-green">English</span>
+              <span class="badge badge-blue">ગુજરાતી</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signOut,
+    sendPasswordResetEmail, createUserWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, getDocs, doc,
+    setDoc, updateDoc, deleteDoc, getCountFromServer, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUserRole = "viewer";
+  let currentUserEmail = "";
+
+  // ── Auth Guard ──────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+
+    currentUserRole  = localStorage.getItem("userRole")  || "viewer";
+    currentUserEmail = user.email || "";
+    const name       = localStorage.getItem("userName")  || "User";
+
+    // Only admins can access settings
+    if (currentUserRole !== "admin") {
+      showToast("Settings are admin-only.", "error");
+      setTimeout(() => window.location.href = "dashboard.html", 1500);
+      return;
+    }
+
+    // Populate sidebar
+    document.getElementById("sidebarUserName").textContent = name;
+    document.getElementById("sidebarUserRole").textContent = "Admin";
+    document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+
+    // My account section
+    document.getElementById("myName").textContent  = name;
+    document.getElementById("myEmail").textContent = currentUserEmail;
+    document.getElementById("myRoleBadge").textContent = "Admin";
+    document.getElementById("myRoleBadge").className = "badge badge-red";
+
+    await Promise.all([loadUsers(), loadTotalRecords()]);
+  });
+
+  // ── Load Users ───────────────────────────────────
+  async function loadUsers() {
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      const tbody = document.getElementById("userTableBody");
+
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px;">No users found</td></tr>`;
+        return;
+      }
+
+      const roleColors = { admin:"badge-red", editor:"badge-blue", viewer:"badge-gray" };
+
+      tbody.innerHTML = snap.docs.map(d => {
+        const u = d.data();
+        const isMe = d.id === localStorage.getItem("userUID");
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="user-avatar" style="width:32px;height:32px;font-size:13px;background:var(--primary);">
+                  ${(u.name||"?").charAt(0).toUpperCase()}
+                </div>
+                <span style="font-weight:600;">${u.name||"–"} ${isMe ? '<span class="badge badge-green" style="font-size:10px;">You</span>' : ""}</span>
+              </div>
+            </td>
+            <td style="color:var(--text-secondary);font-size:13px;">${u.email||"–"}</td>
+            <td>
+              <select class="badge ${roleColors[u.role]||"badge-gray"}"
+                onchange="changeRole('${d.id}', this.value)"
+                style="border:none;cursor:pointer;padding:3px 8px;border-radius:20px;"
+                ${isMe ? "disabled title='Cannot change your own role'" : ""}>
+                <option value="admin"  ${u.role==="admin" ?"selected":""}>Admin</option>
+                <option value="editor" ${u.role==="editor"?"selected":""}>Editor</option>
+                <option value="viewer" ${u.role==="viewer"?"selected":""}>Viewer</option>
+              </select>
+            </td>
+            <td>
+              ${!isMe ? `
+                <button class="btn btn-danger btn-sm"
+                  onclick="deleteUser('${d.id}','${(u.name||"").replace(/'/g,"\\'")}')">
+                  🗑️ Remove
+                </button>` : `<span style="font-size:12px;color:var(--text-muted);">–</span>`}
+            </td>
+          </tr>`;
+      }).join("");
+
+    } catch (err) {
+      console.error(err);
+      showToast("Error loading users", "error");
+    }
+  }
+
+  // ── Total Records ─────────────────────────────────
+  async function loadTotalRecords() {
+    try {
+      const snap = await getCountFromServer(collection(db, "visitors"));
+      document.getElementById("totalRecords").textContent =
+        snap.data().count.toLocaleString();
+    } catch (err) {
+      document.getElementById("totalRecords").textContent = "–";
+    }
+  }
+
+  // ── Create User ───────────────────────────────────
+  window.createUser = async function () {
+    const name     = document.getElementById("newUserName").value.trim();
+    const email    = document.getElementById("newUserEmail").value.trim();
+    const password = document.getElementById("newUserPassword").value;
+    const role     = document.getElementById("newUserRole").value;
+
+    if (!name || !email || !password) {
+      showToast("All fields are required", "error"); return;
+    }
+    if (password.length < 6) {
+      showToast("Password must be at least 6 characters", "error"); return;
+    }
+
+    const btn = document.getElementById("createUserBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Creating...`;
+
+    try {
+      // Create Firebase Auth user
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Save user doc to Firestore
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name, email, role,
+        createdAt: serverTimestamp()
+      });
+
+      showToast(`User "${name}" created successfully! ✅`, "success");
+
+      // Clear form
+      ["newUserName","newUserEmail","newUserPassword"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("newUserRole").value = "editor";
+      toggleAddUserForm();
+      await loadUsers();
+
+    } catch (err) {
+      console.error(err);
+      const msg = err.code === "auth/email-already-in-use"
+        ? "This email is already registered"
+        : err.message;
+      showToast("Error: " + msg, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "Create User";
+    }
+  };
+
+  // ── Change Role ───────────────────────────────────
+  window.changeRole = async function (uid, newRole) {
+    try {
+      await updateDoc(doc(db, "users", uid), { role: newRole });
+      showToast("Role updated to " + newRole, "success");
+    } catch (err) {
+      showToast("Failed to update role", "error");
+      await loadUsers(); // revert UI
+    }
+  };
+
+  // ── Delete User (Firestore doc only) ─────────────
+  window.deleteUser = async function (uid, name) {
+    if (!confirm(`Remove "${name}" from the system?\n\nNote: This removes their access profile. Their Firebase Auth account remains — contact Firebase Console to fully delete it.`)) return;
+    try {
+      await deleteDoc(doc(db, "users", uid));
+      showToast(`"${name}" removed`, "success");
+      await loadUsers();
+    } catch (err) {
+      showToast("Delete failed: " + err.message, "error");
+    }
+  };
+
+  // ── Password Reset ────────────────────────────────
+  window.sendPasswordReset = async function () {
+    try {
+      await sendPasswordResetEmail(auth, currentUserEmail);
+      showToast("Reset link sent to " + currentUserEmail, "success");
+    } catch (err) {
+      showToast("Failed to send reset link", "error");
+    }
+  };
+
+  // ── Toggle Add User Form ──────────────────────────
+  window.toggleAddUserForm = function () {
+    document.getElementById("addUserForm").classList.toggle("open");
+  };
+
+  // ── Sidebar + Logout ──────────────────────────────
+  window.handleLogout = async () => {
+    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+  };
+  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
+  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+</script>
+
+<script>
+  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  function showToast(msg, type="info", dur=4000) {
+    const c=document.getElementById("toastContainer"),t=document.createElement("div");
+    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
+    t.className=`toast ${type}`;t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);setTimeout(()=>t.remove(),dur);
+  }
+</script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(r => console.log("[PWA] SW registered"))
+        .catch(e => console.warn("[PWA] SW failed:", e));
+    });
+  }
+</script>
+</body>
+</html>

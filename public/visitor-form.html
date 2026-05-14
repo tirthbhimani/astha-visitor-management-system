@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visitor Form – Astha VMS</title>
+  <link rel="stylesheet" href="css/main.css"/>
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+
+  <style>
+    .form-page { max-width: 860px; margin: 0 auto; }
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 20px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .photo-upload {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .photo-upload:hover { border-color: var(--primary); }
+    .photo-preview {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .photo-preview img { width:100%; height:100%; object-fit:cover; }
+    .char-count { font-size:11px; color:var(--text-muted); text-align:right; margin-top:2px; }
+    @media (max-width:600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: 1; }
+      .form-actions { flex-direction: column; }
+      .form-actions .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader hidden" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>🏠 Astha Trust</h2>
+      <p>Visitor Management</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"  class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
+      <a href="visitor-form.html" class="nav-item active"><span class="nav-icon">➕</span> Add Visitor</a>
+      <div class="nav-section-title">Management</div>
+      <a href="reminders.html"  class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html"  class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <div class="nav-section-title admin-only"><a href="settings.html" class="nav-item admin-only"><span class="nav-icon">⚙️</span> Settings</a></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">–</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="topbar-title" id="pageTitle">Add Visitor</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="history.back()">← Back</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="form-page">
+
+        <!-- SECTION 1: Basic Info -->
+        <div class="form-section">
+          <div class="form-section-title">👤 Basic Information</div>
+
+         
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="firstName">First Name *</label>
+              <input type="text" id="firstName" class="form-control" placeholder="e.g. Ravi"/>
+              <span class="form-error hidden" id="firstNameError"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="middleName">Middle Name</label>
+              <input type="text" id="middleName" class="form-control" placeholder="e.g. Kumar"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lastName">Last Name *</label>
+              <input type="text" id="lastName" class="form-control" placeholder="e.g. Patel"/>
+              <span class="form-error hidden" id="lastNameError"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gender">Gender</label>
+              <select id="gender" class="form-control">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+                <option>Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateOfBirth">Date of Birth</label>
+              <input type="date" id="dateOfBirth" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="mobileNumber">Mobile Number *</label>
+              <input type="tel" id="mobileNumber" class="form-control" placeholder="10-digit mobile"/>
+              <span class="form-error hidden" id="mobileNumberError"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="whatsappNumber">WhatsApp Number</label>
+              <input type="tel" id="whatsappNumber" class="form-control" placeholder="If different from mobile"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address</label>
+              <input type="email" id="email" class="form-control" placeholder="optional@email.com"/>
+              <span class="form-error hidden" id="emailError"></span>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" for="address">Address</label>
+              <textarea id="address" class="form-control" placeholder="Full address..." rows="2"
+                oninput="updateCharCount(this,'addressCount',200)"></textarea>
+              <div class="char-count"><span id="addressCount">0</span>/200</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Visit Info -->
+        <div class="form-section">
+          <div class="form-section-title">📋 Visit Information</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="visitorType">Visitor Type *</label>
+              <select id="visitorType" class="form-control">
+                <option value="">Select type</option>
+                <option>Donor</option>
+                <option>General Visitor</option>
+                <option>Volunteer</option>
+                <option>Parent Inquiry</option>
+                <option>Sponsor</option>
+                <option>Event Visitor</option>
+                <option>Special Child Inquiry</option>
+              </select>
+              <span class="form-error hidden" id="visitorTypeError"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="visitDate">Visit Date *</label>
+              <input type="date" id="visitDate" class="form-control"/>
+              <span class="form-error hidden" id="visitDateError"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="referredBy">Referred By</label>
+              <input type="text" id="referredBy" class="form-control" placeholder="Person or organization"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="assignedStaff">Assigned Staff</label>
+              <input type="text" id="assignedStaff" class="form-control" placeholder="Staff member name"/>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" for="purposeOfVisit">Purpose of Visit *</label>
+              <textarea id="purposeOfVisit" class="form-control" placeholder="Describe the reason for visit..."
+                oninput="updateCharCount(this,'purposeCount',300)"></textarea>
+              <div class="char-count"><span id="purposeCount">0</span>/300</div>
+              <span class="form-error hidden" id="purposeOfVisitError"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Follow-up -->
+        <div class="form-section">
+          <div class="form-section-title">⏰ Follow-up & Status</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="workStatus">Work Status</label>
+              <select id="workStatus" class="form-control">
+                <option value="">Select status</option>
+                <option>Pending</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+                <option>Rejected</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="followUpDate">Follow-up Date</label>
+              <input type="date" id="followUpDate" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reminderDate">Reminder Date</label>
+              <input type="date" id="reminderDate" class="form-control"/>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" for="notes">Notes</label>
+              <textarea id="notes" class="form-control" rows="3"
+                placeholder="Any additional notes, observations, or follow-up details..."
+                oninput="updateCharCount(this,'notesCount',500)"></textarea>
+              <div class="char-count"><span id="notesCount">0</span>/500</div>
+            </div>
+          </div>
+        </div>
+
+       
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="history.back()">Cancel</button>
+          <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+          <button class="btn btn-primary btn-lg" id="saveBtn" onclick="saveVisitor()">
+            💾 Save Visitor
+          </button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc,
+    addDoc, updateDoc, getDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+
+  const app     = initializeApp(firebaseConfig);
+  const auth    = getAuth(app);
+  const db      = getFirestore(app);
+  const storage = getStorage(app);
+
+  let editId       = null;
+  let photoFile    = null;
+  let selectedDocs = [];
+  let userRole     = "viewer";
+
+  // ── Auth Guard ──────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+    userRole = localStorage.getItem("userRole") || "viewer";
+
+    if (userRole === "viewer") {
+      showToast("You don't have permission to add/edit visitors.", "error");
+      setTimeout(() => window.location.href = "visitors.html", 2000);
+      return;
+    }
+
+    const name = localStorage.getItem("userName") || "User";
+    document.getElementById("sidebarUserName").textContent = name;
+    document.getElementById("sidebarUserRole").textContent =
+      userRole.charAt(0).toUpperCase() + userRole.slice(1);
+    document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+
+    if (userRole !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
+
+    // Set default visit date to today
+    document.getElementById("visitDate").value = new Date().toISOString().split("T")[0];
+
+    // Check if editing
+    const params = new URLSearchParams(window.location.search);
+    editId = params.get("id");
+    if (editId) {
+      document.getElementById("pageTitle").textContent = "Edit Visitor";
+      document.querySelector(".topbar-title").textContent = "Edit Visitor";
+      await loadVisitorForEdit(editId);
+    }
+  });
+
+  // ── Load for Edit ───────────────────────────────
+  async function loadVisitorForEdit(id) {
+    showLoader();
+    try {
+      const snap = await getDoc(doc(db, "visitors", id));
+      if (!snap.exists()) {
+        showToast("Visitor not found", "error");
+        window.location.href = "visitors.html";
+        return;
+      }
+      const d = snap.data();
+      const fields = [
+        "firstName","middleName","lastName","gender","dateOfBirth",
+        "mobileNumber","whatsappNumber","email","address",
+        "visitorType","visitDate","purposeOfVisit","referredBy","assignedStaff",
+        "workStatus","followUpDate","reminderDate","notes"
+      ];
+      fields.forEach(f => {
+        const el = document.getElementById(f);
+        if (el && d[f] !== undefined) el.value = d[f];
+      });
+      // Restore char counts
+      ["address","purposeOfVisit","notes"].forEach(f => {
+        const el = document.getElementById(f);
+        if (el) {
+          const countId = { address:"addressCount", purposeOfVisit:"purposeCount", notes:"notesCount" }[f];
+          if (countId) document.getElementById(countId).textContent = (el.value||"").length;
+        }
+      });
+      if (d.photoURL) {
+        document.getElementById("photoPreview").innerHTML =
+          `<img src="${d.photoURL}" alt="photo"/>`;
+      }
+    } catch (err) {
+      showToast("Error loading visitor data", "error");
+    } finally {
+      hideLoader();
+    }
+  }
+
+  // ── Photo Handling ──────────────────────────────
+  window.handlePhotoSelect = function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Photo must be under 2MB", "error");
+      return;
+    }
+    photoFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById("photoPreview").innerHTML =
+        `<img src="${ev.target.result}" alt="preview"/>`;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ── Document Handling ───────────────────────────
+  window.handleDocSelect = function (e) {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name} exceeds 5MB limit`, "warning");
+        return;
+      }
+      selectedDocs.push(file);
+      const tag = document.createElement("div");
+      tag.className = "badge badge-blue";
+      tag.style.gap = "6px";
+      tag.innerHTML = `📄 ${file.name.substring(0,20)}${file.name.length>20?"...":""}
+        <button onclick="removeDoc(${selectedDocs.length-1}, this.parentElement)"
+          style="background:none;border:none;cursor:pointer;font-size:12px;color:inherit;">✕</button>`;
+      document.getElementById("docList").appendChild(tag);
+    });
+  };
+
+  window.removeDoc = function (index, el) {
+    selectedDocs[index] = null;
+    el.remove();
+  };
+
+  // ── Save Visitor ────────────────────────────────
+  window.saveVisitor = async function () { await save(false); };
+  window.saveDraft   = async function () { await save(true); };
+
+  async function save(isDraft) {
+  if (!validateForm()) return;
+
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Saving...`;
+  showLoader();
+
+  try {
+    // Upload photo only if selected
+    let photoURL = null;
+    if (photoFile) {
+      try {
+        const photoRef = ref(storage, `visitors/photos/${Date.now()}_${photoFile.name}`);
+        await uploadBytes(photoRef, photoFile);
+        photoURL = await getDownloadURL(photoRef);
+      } catch (uploadErr) {
+        console.warn("Photo upload failed, saving without photo:", uploadErr);
+        // Don't block the save — just skip the photo
+      }
+    }
+
+    // Upload documents only if selected
+    const docURLs = [];
+    for (const file of selectedDocs) {
+      if (!file) continue;
+      try {
+        const docRef = ref(storage, `visitors/docs/${Date.now()}_${file.name}`);
+        await uploadBytes(docRef, file);
+        const url = await getDownloadURL(docRef);
+        docURLs.push({ name: file.name, url });
+      } catch (uploadErr) {
+        console.warn("Doc upload failed, skipping:", file.name, uploadErr);
+      }
+    }
+
+    // Build data — all form fields
+    const data = {
+      firstName:       document.getElementById("firstName").value.trim(),
+      middleName:      document.getElementById("middleName").value.trim(),
+      lastName:        document.getElementById("lastName").value.trim(),
+      gender:          document.getElementById("gender").value,
+      dateOfBirth:     document.getElementById("dateOfBirth").value,
+      mobileNumber:    document.getElementById("mobileNumber").value.trim(),
+      whatsappNumber:  document.getElementById("whatsappNumber").value.trim(),
+      email:           document.getElementById("email").value.trim(),
+      address:         document.getElementById("address").value.trim(),
+      visitorType:     document.getElementById("visitorType").value,
+      visitDate:       document.getElementById("visitDate").value,
+      purposeOfVisit:  document.getElementById("purposeOfVisit").value.trim(),
+      referredBy:      document.getElementById("referredBy").value.trim(),
+      assignedStaff:   document.getElementById("assignedStaff").value.trim(),
+      workStatus:      document.getElementById("workStatus").value || "Pending",
+      followUpDate:    document.getElementById("followUpDate").value,
+      reminderDate:    document.getElementById("reminderDate").value,
+      notes:           document.getElementById("notes").value.trim(),
+      isDraft:         isDraft,
+      updatedAt:       serverTimestamp(),
+    };
+
+    // Only add these if they have values
+    if (photoURL)       data.photoURL   = photoURL;
+    if (docURLs.length) data.documents  = docURLs;
+
+    if (editId) {
+      await updateDoc(doc(db, "visitors", editId), data);
+      showToast("Visitor updated successfully! ✅", "success");
+    } else {
+      data.createdAt = serverTimestamp();
+      data.createdBy = localStorage.getItem("userUID") || "";
+      const docRef = await addDoc(collection(db, "visitors"), data);
+      console.log("Visitor saved with ID:", docRef.id);
+      showToast(isDraft ? "Draft saved! 📝" : "Visitor added successfully! ✅", "success");
+    }
+
+    setTimeout(() => window.location.href = "visitors.html", 1200);
+
+  } catch (err) {
+    console.error("SAVE ERROR:", err);
+    showToast("Save failed: " + err.message, "error");
+    btn.disabled = false;
+    btn.innerHTML = "💾 Save Visitor";
+    hideLoader();
+  }
+}
+
+  // ── Validation ──────────────────────────────────
+  function validateForm() {
+    clearErrors();
+    let valid = true;
+
+    const required = [
+      { id: "firstName",      errId: "firstNameError",      msg: "First name is required" },
+      { id: "lastName",       errId: "lastNameError",       msg: "Last name is required" },
+      { id: "mobileNumber",   errId: "mobileNumberError",   msg: "Mobile number is required" },
+      { id: "visitorType",    errId: "visitorTypeError",    msg: "Visitor type is required" },
+      { id: "visitDate",      errId: "visitDateError",      msg: "Visit date is required" },
+      { id: "purposeOfVisit", errId: "purposeOfVisitError", msg: "Purpose of visit is required" },
+    ];
+
+    required.forEach(({ id, errId, msg }) => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        showFieldError(errId, msg);
+        el.classList.add("error");
+        valid = false;
+      }
+    });
+
+    // Mobile validation
+    const mobile = document.getElementById("mobileNumber").value.trim();
+    if (mobile && !/^\d{10}$/.test(mobile)) {
+      showFieldError("mobileNumberError", "Enter a valid 10-digit mobile number");
+      valid = false;
+    }
+
+    // Email validation
+    const email = document.getElementById("email").value.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showFieldError("emailError", "Enter a valid email address");
+      valid = false;
+    }
+
+    if (!valid) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast("Please fix the errors above", "error");
+    }
+
+    return valid;
+  }
+
+  function showFieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.classList.remove("hidden"); }
+  }
+
+  function clearErrors() {
+    document.querySelectorAll(".form-error").forEach(el => {
+      el.classList.add("hidden"); el.textContent = "";
+    });
+    document.querySelectorAll(".form-control").forEach(el => el.classList.remove("error"));
+  }
+
+  // ── Helpers ─────────────────────────────────────
+  window.updateCharCount = function (el, countId, max) {
+    const len = el.value.length;
+    document.getElementById(countId).textContent = len;
+    if (len > max) el.value = el.value.substring(0, max);
+  };
+
+  function showLoader() { document.getElementById("pageLoader").classList.remove("hidden"); }
+  function hideLoader() { document.getElementById("pageLoader").classList.add("hidden"); }
+
+  window.handleLogout = async function () {
+    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+  };
+  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
+  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+</script>
+
+<script>
+  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  function showToast(msg, type="info", dur=4000) {
+    const c = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
+    t.className=`toast ${type}`;
+    t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(),dur);
+  }
+</script>
+
+<!-- PWA Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
+        .catch(err => console.warn("[PWA] SW registration failed:", err));
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Astha VMS</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#2E7D32"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
+</head>
+<body>
+
+<div class="page-loader hidden" id="pageLoader">
+  <div class="spinner spinner-dark"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>🏠 Astha Trust</h2>
+      <p>Visitor Management</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard.html" class="nav-item active">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="visitors.html" class="nav-item">
+        <span class="nav-icon">👥</span> Visitors
+      </a>
+      <a href="visitor-form.html" class="nav-item" id="navAddVisitor">
+        <span class="nav-icon">➕</span> Add Visitor
+      </a>
+
+      <div class="nav-section-title">Management</div>
+      <a href="reminders.html" class="nav-item">
+        <span class="nav-icon">🔔</span> Reminders
+      </a>
+      <a href="analytics.html" class="nav-item">
+        <span class="nav-icon">📈</span> Analytics
+      </a>
+
+      <div class="nav-section-title admin-only" id="adminSection">Admin</div>
+      <a href="settings.html" class="nav-item admin-only">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="sidebarUserName">Loading...</div>
+          <div class="user-role" id="sidebarUserRole">–</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">
+        🚪 Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="topbar-title">Dashboard</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search visitors..."
+            id="globalSearch"
+            onkeydown="if(event.key==='Enter') searchVisitor()"
+          />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='visitor-form.html'" id="topAddBtn">
+          + Add Visitor
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner" id="welcomeBanner">
+        <div>
+          <h2 id="welcomeMsg">Good morning! 👋</h2>
+          <p id="welcomeDate"></p>
+        </div>
+        <div class="welcome-badge" id="roleBadge"></div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E8F5E9; color:#2E7D32;">👥</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statTotalVisitors">–</div>
+            <div class="stat-label">Total Visitors</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FFF8E1; color:#F57F17;">💰</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statDonors">–</div>
+            <div class="stat-label">Donors</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FCE4EC; color:#C62828;">🎂</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statBirthdays">–</div>
+            <div class="stat-label">Birthdays This Week</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E3F2FD; color:#1565C0;">⏰</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statPendingFollowups">–</div>
+            <div class="stat-label">Pending Follow-ups</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two column layout -->
+      <div class="dashboard-grid">
+
+        <!-- Recent Visitors -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Visitors</h3>
+            <a href="visitors.html" class="btn btn-ghost btn-sm">View All →</a>
+          </div>
+          <div id="recentVisitorsList">
+            <div class="empty-state">
+              <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Birthdays -->
+        <div class="card">
+          <div class="card-header">
+            <h3>🎂 Upcoming Birthdays</h3>
+            <span class="badge badge-amber" id="birthdayCount">Loading...</span>
+          </div>
+          <div id="birthdayList">
+            <div class="empty-state">
+              <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Follow-ups -->
+        <div class="card">
+          <div class="card-header">
+            <h3>⏰ Pending Follow-ups</h3>
+            <a href="reminders.html" class="btn btn-ghost btn-sm">Manage →</a>
+          </div>
+          <div id="followupList">
+            <div class="empty-state">
+              <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visitor Types Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📊 Visitor Types</h3>
+          </div>
+          <div id="visitorTypesChart">
+            <div class="empty-state">
+              <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    limit,
+    where,
+    getDocs,
+    getCountFromServer
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── Your Firebase config ─────────────────────────
+ const firebaseConfig = {
+  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+  projectId: "astha-visitor-app-a1e26",
+  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+  messagingSenderId: "672371493215",
+  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+  measurementId: "G-MZ0FYNKET8"
+};
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // ── Auth Guard ───────────────────────────────────
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+    } else {
+      initDashboard();
+    }
+  });
+
+  async function initDashboard() {
+    const role = localStorage.getItem("userRole") || "viewer";
+    const name = localStorage.getItem("userName") || "User";
+
+    // Set user info in sidebar
+    document.getElementById("sidebarUserName").textContent = name;
+    document.getElementById("sidebarUserRole").textContent =
+      role.charAt(0).toUpperCase() + role.slice(1);
+    document.getElementById("userAvatar").textContent =
+      name.charAt(0).toUpperCase();
+
+    // Role badge
+    const roleColors = { admin: "badge-red", editor: "badge-blue", viewer: "badge-gray" };
+    document.getElementById("roleBadge").innerHTML =
+      `<span class="badge ${roleColors[role] || 'badge-gray'}">${role.toUpperCase()}</span>`;
+
+    // Hide admin-only items for non-admins
+    if (role !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
+
+    // Hide "Add Visitor" for viewers
+    if (role === "viewer") {
+      document.getElementById("navAddVisitor").style.display = "none";
+      document.getElementById("topAddBtn").style.display = "none";
+    }
+
+    // Welcome message
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    document.getElementById("welcomeMsg").textContent = `${greeting}, ${name}! 👋`;
+    document.getElementById("welcomeDate").textContent = new Date().toLocaleDateString("en-IN", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    });
+
+    // Load all dashboard data
+    await Promise.all([
+      loadStats(),
+      loadRecentVisitors(),
+      loadUpcomingBirthdays(),
+      loadPendingFollowups(),
+      loadVisitorTypeChart()
+    ]);
+  }
+
+  // ── Stats ────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const visitorsRef = collection(db, "visitors");
+
+      // Total visitors
+      const totalSnap = await getCountFromServer(visitorsRef);
+      document.getElementById("statTotalVisitors").textContent =
+        totalSnap.data().count.toLocaleString();
+
+      // Donors
+      const donorQ = query(visitorsRef, where("visitorType", "==", "Donor"));
+      const donorSnap = await getCountFromServer(donorQ);
+      document.getElementById("statDonors").textContent =
+        donorSnap.data().count.toLocaleString();
+
+      // Birthdays this week
+      const bdays = await getBirthdaysThisWeek();
+      document.getElementById("statBirthdays").textContent = bdays.length;
+
+      // Pending follow-ups
+      // Pending follow-ups — remove the query, count from already-fetched data
+      const pendingQ = query(visitorsRef, where("workStatus", "==", "Pending"));
+      const pendingSnap = await getCountFromServer(pendingQ);
+      document.getElementById("statPendingFollowups").textContent =
+      pendingSnap.data().count.toLocaleString();
+
+    } catch (err) {
+      console.error("Stats error:", err);
+    }
+  }
+
+  // ── Recent Visitors ──────────────────────────────
+  async function loadRecentVisitors() {
+    try {
+      const q = query(
+        collection(db, "visitors"),
+        orderBy("visitDate", "desc"),
+        limit(6)
+      );
+      const snap = await getDocs(q);
+      const container = document.getElementById("recentVisitorsList");
+
+      if (snap.empty) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h3>No visitors yet</h3>
+            <p>Add your first visitor to get started</p>
+          </div>`;
+        return;
+      }
+
+      const typeColors = {
+        "Donor": "badge-amber",
+        "Volunteer": "badge-green",
+        "Parent Inquiry": "badge-blue",
+        "General Visitor": "badge-gray",
+        "Sponsor": "badge-purple",
+        "Event Visitor": "badge-green",
+        "Special Child Inquiry": "badge-red"
+      };
+
+      container.innerHTML = snap.docs.map(doc => {
+        const d = doc.data();
+        const name = `${d.firstName || ""} ${d.lastName || ""}`.trim();
+        const color = typeColors[d.visitorType] || "badge-gray";
+        const date = d.visitDate
+          ? new Date(d.visitDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
+          : "–";
+        return `
+          <div class="visitor-row" onclick="window.location.href='visitor-detail.html?id=${doc.id}'">
+            <div class="visitor-avatar">${name.charAt(0).toUpperCase()}</div>
+            <div class="visitor-info">
+              <div class="visitor-name">${name || "Unknown"}</div>
+              <div class="visitor-meta">${d.mobileNumber || "–"}</div>
+            </div>
+            <div>
+              <span class="badge ${color}" style="font-size:11px;">${d.visitorType || "–"}</span>
+              <div class="visitor-date">${date}</div>
+            </div>
+          </div>`;
+      }).join("");
+
+    } catch (err) {
+      console.error("Recent visitors error:", err);
+      document.getElementById("recentVisitorsList").innerHTML =
+        `<p style="color:var(--danger); padding:12px;">Error loading data</p>`;
+    }
+  }
+
+  // ── Birthdays ────────────────────────────────────
+  async function getBirthdaysThisWeek() {
+    const today = new Date();
+    const results = [];
+    try {
+      const snap = await getDocs(collection(db, "visitors"));
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (!d.dateOfBirth) return;
+        const dob = new Date(d.dateOfBirth);
+        const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+        const diff = Math.ceil((thisYear - today) / (1000 * 60 * 60 * 24));
+        if (diff >= 0 && diff <= 7) {
+          results.push({ id: doc.id, ...d, daysUntil: diff, birthdayDate: thisYear });
+        }
+      });
+    } catch (err) { console.error("Birthday error:", err); }
+    return results.sort((a, b) => a.daysUntil - b.daysUntil);
+  }
+
+  async function loadUpcomingBirthdays() {
+    const birthdays = await getBirthdaysThisWeek();
+    const container = document.getElementById("birthdayList");
+    document.getElementById("birthdayCount").textContent =
+      `${birthdays.length} this week`;
+
+    if (birthdays.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎂</div>
+          <p>No birthdays in the next 7 days</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = birthdays.map(v => {
+      const name = `${v.firstName || ""} ${v.lastName || ""}`.trim();
+      const phone = v.whatsappNumber || v.mobileNumber || "";
+      const msg = encodeURIComponent(
+        `પ્રિય ${name}, આસ્થા ચેરિટેબલ ટ્રસ્ટ (આસ્થા સ્નેહ નું ઘર) તરફથી આપને જન્મ દિવસની ખૂબ ખૂબ શુભકામનાઓ! \nભગવાન આપને સ્વાસ્થ્ય, સુખ અને સમૃદ્ધિ આપે. આપનો આ ખાસ દિવસ ખૂબ આનંદમય રહે.\n\n- આસ્થા સ્નેહ નું ઘર`
+      );
+      const waLink = phone ? `https://wa.me/91${phone.replace(/\D/g,'')}?text=${msg}` : "#";
+      const dayLabel = v.daysUntil === 0 ? "🎉 Today!" : `In ${v.daysUntil} day${v.daysUntil>1?"s":""}`;
+
+      return `
+  <div class="birthday-row">
+    <div class="visitor-avatar bday-avatar">${name.charAt(0).toUpperCase()}</div>
+    <div class="visitor-info">
+      <div class="visitor-name">${name}</div>
+      <div class="visitor-meta">${dayLabel}</div>
+    </div>
+    <div style="display:flex; gap:6px; flex-shrink:0;">
+      ${phone ? `
+        <button onclick="sendBdayWish('${phone}','${name.replace(/'/g,"\\'")}','en')"
+          class="btn btn-accent btn-sm" title="English">🎂 EN</button>
+        <button onclick="sendBdayWish('${phone}','${name.replace(/'/g,"\\'")}','gu')"
+          style="background:#128C7E; color:#fff;" class="btn btn-sm" title="Gujarati">🎂 ગુ</button>
+      ` : `<span style="font-size:11px;color:var(--text-muted);">No number</span>`}
+    </div>
+  </div>`;
+    }).join("");
+  }
+
+  // ── Follow-ups ───────────────────────────────────
+  async function loadPendingFollowups() {
+  try {
+    // Fetch all pending visitors without orderBy to avoid composite index requirement
+    const q = query(
+      collection(db, "visitors"),
+      where("workStatus", "==", "Pending")
+    );
+    const snap = await getDocs(q);
+    const container = document.getElementById("followupList");
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">✅</div>
+          <p>No pending follow-ups</p>
+        </div>`;
+      return;
+    }
+
+    // Sort client-side by followUpDate ascending
+    let items = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(v => v.followUpDate) // only those with a follow-up date
+      .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate))
+      .slice(0, 5);
+
+    if (!items.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">✅</div>
+          <p>No follow-up dates set</p>
+        </div>`;
+      return;
+    }
+
+    const today = new Date();
+    container.innerHTML = items.map(v => {
+      const name       = `${v.firstName || ""} ${v.lastName || ""}`.trim();
+      const followDate = new Date(v.followUpDate);
+      const dateStr    = followDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+      const isOverdue  = followDate < today;
+      const isToday    = followDate.toDateString() === today.toDateString();
+      const color      = isOverdue ? "var(--danger)" : isToday ? "var(--accent)" : "var(--text-muted)";
+
+      return `
+        <div class="visitor-row" onclick="window.location.href='visitor-detail.html?id=${v.id}'">
+          <div class="visitor-avatar" style="background:#E3F2FD; color:#1565C0; font-size:16px;">⏰</div>
+          <div class="visitor-info">
+            <div class="visitor-name">${name}</div>
+            <div class="visitor-meta">${v.purposeOfVisit ? v.purposeOfVisit.substring(0, 40) : "–"}</div>
+          </div>
+          <div class="visitor-date" style="color:${color}; font-weight:600;">
+            ${isOverdue ? "⚠️ " : isToday ? "📌 " : ""}${dateStr}
+          </div>
+        </div>`;
+    }).join("");
+
+  } catch (err) {
+    console.error("Follow-up error:", err);
+    document.getElementById("followupList").innerHTML =
+      `<p style="color:var(--danger); padding:12px; font-size:13px;">Error: ${err.message}</p>`;
+  }
+}
+
+  // ── Visitor Type Chart (pure CSS bars) ──────────
+  async function loadVisitorTypeChart() {
+    const TYPES = [
+      "Donor", "General Visitor", "Volunteer",
+      "Parent Inquiry", "Sponsor", "Event Visitor", "Special Child Inquiry"
+    ];
+    const COLORS = ["#FF8F00","#2E7D32","#1565C0","#6A1B9A","#C62828","#00695C","#E65100"];
+
+    try {
+      const snap = await getDocs(collection(db, "visitors"));
+      const counts = {};
+      TYPES.forEach(t => counts[t] = 0);
+
+      snap.forEach(doc => {
+        const type = doc.data().visitorType;
+        if (type && counts[type] !== undefined) counts[type]++;
+      });
+
+      const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+      const container = document.getElementById("visitorTypesChart");
+
+      container.innerHTML = TYPES.map((t, i) => {
+        const pct = Math.round((counts[t] / total) * 100);
+        return `
+          <div class="chart-row">
+            <div class="chart-label">${t}</div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="width:${pct}%; background:${COLORS[i]};"></div>
+            </div>
+            <div class="chart-value">${counts[t]}</div>
+          </div>`;
+      }).join("");
+
+    } catch (err) {
+      console.error("Chart error:", err);
+    }
+  }
+
+  // ── Logout ───────────────────────────────────────
+  window.handleLogout = async function () {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = "index.html";
+  };
+
+  // ── Global Search ─────────────────────────────────
+  window.searchVisitor = function () {
+    const val = document.getElementById("globalSearch").value.trim();
+    if (val) window.location.href = `visitors.html?search=${encodeURIComponent(val)}`;
+  };
+
+  // ── Sidebar Mobile ────────────────────────────────
+  window.openSidebar = function () {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+  };
+  window.closeSidebar = function () {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+  };
+
+  window.sendBdayWish = function(phone, name, lang) {
+  const cleaned = phone.replace(/\D/g, "");
+  const number  = cleaned.startsWith("91") ? cleaned : `91${cleaned}`;
+  const msg = lang === "gu"
+    ? `પ્રિય ${name},\n\nઆસ્થા ચેરિટેબલ ટ્રસ્ટ (આસ્થા સ્નેહ નું ઘર) તરફથી આપને જન્મ દિવસની ખૂબ ખૂબ શુભકામનાઓ! \n\nભગવાન આપને સ્વાસ્થ્ય, સુખ અને સમૃદ્ધિ આપે.\n\nઆભાર,\n આસ્થા સ્નેહ નું ઘર `
+    : `Dear ${name},\n\nAstha Charitable Trust (Astha Sneh Nu Ghar) wishes you a very Happy Birthday! \n\nMay this special day bring you joy, good health, and happiness.\n\nWith warm regards,\nTeam Astha Sneh Nu Ghar `;
+  window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`, "_blank");
+};
+</script>
+
+<script>
+  // Toast + hidden utility
+  document.head.insertAdjacentHTML("beforeend", "<style>.hidden{display:none!important}</style>");
+  function showToast(message, type = "info", duration = 4000) {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type]||"ℹ️"}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+</script>
+
+<!-- PWA Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
+        .catch(err => console.warn("[PWA] SW registration failed:", err));
+    });
+  }
+</script>
+
+</body>
+</html>
