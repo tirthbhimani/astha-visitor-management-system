@@ -340,7 +340,8 @@
         "General Visitor": "badge-gray",
         "Sponsor": "badge-purple",
         "Event Visitor": "badge-green",
-        "Special Child Inquiry": "badge-red"
+        "Special Child Inquiry": "badge-red",
+        //"Job Enquiry": "badge-blue"  // ← teal for Job Enquiry
       };
 
       container.innerHTML = snap.docs.map(doc => {
@@ -502,10 +503,10 @@
   // ── Visitor Type Chart (pure CSS bars) ──────────
   async function loadVisitorTypeChart() {
     const TYPES = [
-      "Donor", "General Visitor", "Volunteer",
-      "Parent Inquiry", "Sponsor", "Event Visitor", "Special Child Inquiry"
+      "Donor", "General Visitor", "Volunteer","Job Enquiry",
+      "Trustee", "Special Child Inquiry"
     ];
-    const COLORS = ["#FF8F00","#2E7D32","#1565C0","#6A1B9A","#C62828","#00695C","#E65100"];
+    const COLORS = ["#FF8F00","#2E7D32","#1565C0","#6A1B9A","#C62828","#00695C","#E65100","#00838F" ];
 
     try {
       const snap = await getDocs(collection(db, "visitors"));

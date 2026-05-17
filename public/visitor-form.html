@@ -4,16 +4,36 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visitor Form – Astha VMS</title>
-  <link rel="stylesheet" href="css/main.css"/>
-
   <link rel="manifest" href="/manifest.json"/>
   <meta name="theme-color" content="#2E7D32"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
-
+  <link rel="stylesheet" href="css/main.css"/>
   <style>
     .form-page { max-width: 860px; margin: 0 auto; }
+
+    #mobileScreen {
+      max-width: 480px;
+      margin: 60px auto 0;
+      text-align: center;
+    }
+    .mobile-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .mobile-card-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(46,125,50,0.25);
+    }
+    .mobile-card h2 { margin-bottom: 6px; }
+    .mobile-card p  { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
     .form-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -40,6 +60,21 @@
       gap: 0 20px;
     }
     .form-grid .full { grid-column: 1 / -1; }
+
+    .returning-banner {
+      background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .returning-banner-icon { font-size: 28px; flex-shrink: 0; }
+    .returning-banner-info { flex: 1; }
+    .returning-banner-info strong { color: var(--primary); }
+
     .form-actions {
       display: flex;
       gap: 12px;
@@ -51,36 +86,21 @@
       border-top: 1px solid var(--border);
       margin-top: 8px;
     }
-    .photo-upload {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px;
-      border: 2px dashed var(--border);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: border-color 0.2s;
+    .char-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 2px;
     }
-    .photo-upload:hover { border-color: var(--primary); }
-    .photo-preview {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--surface-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    .photo-preview img { width:100%; height:100%; object-fit:cover; }
-    .char-count { font-size:11px; color:var(--text-muted); text-align:right; margin-top:2px; }
-    @media (max-width:600px) {
+    #specialChildGroup { margin-top: -8px; }
+
+    @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
       .form-grid .full { grid-column: 1; }
       .form-actions { flex-direction: column; }
       .form-actions .btn { width: 100%; justify-content: center; }
+      .mobile-card { padding: 28px 20px; }
+      #mobileScreen { margin-top: 30px; }
     }
   </style>
 </head>
@@ -91,6 +111,35 @@
 </div>
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Returning Visitor Modal -->
+<div class="modal-overlay hidden" id="returningVisitorModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>🔄 Returning Visitor Found</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeReturningModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:16px;">This mobile number already exists in the database:</p>
+      <div id="returningVisitorCard"
+        style="background:var(--surface-2);border:1px solid var(--border);
+               border-radius:var(--radius-md);padding:16px;margin-bottom:16px;">
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);">What would you like to do?</p>
+    </div>
+    <div class="modal-footer" style="flex-direction:column;gap:10px;align-items:stretch;">
+      <button class="btn btn-primary btn-full" onclick="proceedAsNewEntry()">
+        ➕ Create New Visit Entry
+      </button>
+      <button class="btn btn-outline btn-full" onclick="goToExistingEntry()">
+        ✏️ Update Existing Visitor Record
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="closeReturningModal()">
+        Cancel — Enter Different Number
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
@@ -99,13 +148,18 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Main</div>
-      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="visitors.html"  class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
-      <a href="visitor-form.html" class="nav-item active"><span class="nav-icon">➕</span> Add Visitor</a>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"     class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
+      <a href="visitor-form.html" class="nav-item active">
+        <span class="nav-icon">➕</span> Add Visitor
+      </a>
       <div class="nav-section-title">Management</div>
-      <a href="reminders.html"  class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
-      <a href="analytics.html"  class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
-      <div class="nav-section-title admin-only"><a href="settings.html" class="nav-item admin-only"><span class="nav-icon">⚙️</span> Settings</a></div>
+      <a href="reminders.html"    class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html"    class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <div class="nav-section-title admin-only">Admin</div>
+      <a href="settings.html" class="nav-item admin-only">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-info">
@@ -115,7 +169,8 @@
           <div class="user-role" id="sidebarUserRole">–</div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()"
+        style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -132,193 +187,286 @@
     </header>
 
     <main class="page-content">
-      <div class="form-page">
 
-        <!-- SECTION 1: Basic Info -->
-        <div class="form-section">
-          <div class="form-section-title">👤 Basic Information</div>
-
-         
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label" for="firstName">First Name *</label>
-              <input type="text" id="firstName" class="form-control" placeholder="e.g. Ravi"/>
-              <span class="form-error hidden" id="firstNameError"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="middleName">Middle Name</label>
-              <input type="text" id="middleName" class="form-control" placeholder="e.g. Kumar"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="lastName">Last Name *</label>
-              <input type="text" id="lastName" class="form-control" placeholder="e.g. Patel"/>
-              <span class="form-error hidden" id="lastNameError"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="gender">Gender</label>
-              <select id="gender" class="form-control">
-                <option value="">Select</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-                <option>Prefer not to say</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="dateOfBirth">Date of Birth</label>
-              <input type="date" id="dateOfBirth" class="form-control"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="mobileNumber">Mobile Number *</label>
-              <input type="tel" id="mobileNumber" class="form-control" placeholder="10-digit mobile"/>
-              <span class="form-error hidden" id="mobileNumberError"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="whatsappNumber">WhatsApp Number</label>
-              <input type="tel" id="whatsappNumber" class="form-control" placeholder="If different from mobile"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="email">Email Address</label>
-              <input type="email" id="email" class="form-control" placeholder="optional@email.com"/>
-              <span class="form-error hidden" id="emailError"></span>
-            </div>
-            <div class="form-group full">
-              <label class="form-label" for="address">Address</label>
-              <textarea id="address" class="form-control" placeholder="Full address..." rows="2"
-                oninput="updateCharCount(this,'addressCount',200)"></textarea>
-              <div class="char-count"><span id="addressCount">0</span>/200</div>
-            </div>
+      <!-- STEP 1: Mobile Screen -->
+      <div id="mobileScreen">
+        <div class="mobile-card">
+          <div class="mobile-card-icon">📱</div>
+          <h2>Enter Mobile Number</h2>
+          <p>Enter the visitor's mobile number first. We'll check if they have visited before.</p>
+          <div class="form-group" style="text-align:left;">
+            <label class="form-label" for="mobileCheck">Mobile Number *</label>
+            <input type="tel" id="mobileCheck" class="form-control"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+              oninput="this.value=this.value.replace(/\D/g,'')"
+              onkeydown="if(event.key==='Enter') checkMobile()"
+              style="font-size:18px;text-align:center;letter-spacing:2px;"/>
+            <span class="form-error hidden" id="mobileCheckError"></span>
           </div>
-        </div>
-
-        <!-- SECTION 2: Visit Info -->
-        <div class="form-section">
-          <div class="form-section-title">📋 Visit Information</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label" for="visitorType">Visitor Type *</label>
-              <select id="visitorType" class="form-control">
-                <option value="">Select type</option>
-                <option>Donor</option>
-                <option>General Visitor</option>
-                <option>Volunteer</option>
-                <option>Parent Inquiry</option>
-                <option>Sponsor</option>
-                <option>Event Visitor</option>
-                <option>Special Child Inquiry</option>
-              </select>
-              <span class="form-error hidden" id="visitorTypeError"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="visitDate">Visit Date *</label>
-              <input type="date" id="visitDate" class="form-control"/>
-              <span class="form-error hidden" id="visitDateError"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="referredBy">Referred By</label>
-              <input type="text" id="referredBy" class="form-control" placeholder="Person or organization"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="assignedStaff">Assigned Staff</label>
-              <input type="text" id="assignedStaff" class="form-control" placeholder="Staff member name"/>
-            </div>
-            <div class="form-group full">
-              <label class="form-label" for="purposeOfVisit">Purpose of Visit *</label>
-              <textarea id="purposeOfVisit" class="form-control" placeholder="Describe the reason for visit..."
-                oninput="updateCharCount(this,'purposeCount',300)"></textarea>
-              <div class="char-count"><span id="purposeCount">0</span>/300</div>
-              <span class="form-error hidden" id="purposeOfVisitError"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 3: Follow-up -->
-        <div class="form-section">
-          <div class="form-section-title">⏰ Follow-up & Status</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label" for="workStatus">Work Status</label>
-              <select id="workStatus" class="form-control">
-                <option value="">Select status</option>
-                <option>Pending</option>
-                <option>In Progress</option>
-                <option>Completed</option>
-                <option>Rejected</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="followUpDate">Follow-up Date</label>
-              <input type="date" id="followUpDate" class="form-control"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="reminderDate">Reminder Date</label>
-              <input type="date" id="reminderDate" class="form-control"/>
-            </div>
-            <div class="form-group full">
-              <label class="form-label" for="notes">Notes</label>
-              <textarea id="notes" class="form-control" rows="3"
-                placeholder="Any additional notes, observations, or follow-up details..."
-                oninput="updateCharCount(this,'notesCount',500)"></textarea>
-              <div class="char-count"><span id="notesCount">0</span>/500</div>
-            </div>
-          </div>
-        </div>
-
-       
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button class="btn btn-ghost" onclick="history.back()">Cancel</button>
-          <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
-          <button class="btn btn-primary btn-lg" id="saveBtn" onclick="saveVisitor()">
-            💾 Save Visitor
+          <button class="btn btn-primary btn-full btn-lg" id="checkMobileBtn"
+            onclick="checkMobile()" style="margin-top:8px;">
+            Continue →
           </button>
         </div>
-
       </div>
+
+      <!-- STEP 2: Full Form -->
+      <div id="visitorFormScreen" class="hidden">
+        <div class="form-page">
+
+          <!-- Returning visitor banner -->
+          <div class="returning-banner hidden" id="returningBanner">
+            <div class="returning-banner-icon">🔄</div>
+            <div class="returning-banner-info">
+              <strong>Returning Visitor</strong> — Basic info pre-filled from last visit.
+              Please update Purpose of Visit and other new details.
+              <div style="margin-top:6px;">
+                <a id="viewPastLink" href="#" class="btn btn-outline btn-sm"
+                  style="font-size:12px;" target="_blank">
+                  👁 View Past Record
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 1: Basic Info -->
+          <div class="form-section">
+            <div class="form-section-title">👤 Basic Information</div>
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label class="form-label" for="firstName">First Name *</label>
+                <input type="text" id="firstName" class="form-control" placeholder="e.g. Ravi"/>
+                <span class="form-error hidden" id="firstNameError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="middleName">Middle Name</label>
+                <input type="text" id="middleName" class="form-control" placeholder="e.g. Kumar"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="lastName">Last Name *</label>
+                <input type="text" id="lastName" class="form-control" placeholder="e.g. Patel"/>
+                <span class="form-error hidden" id="lastNameError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gender">Gender</label>
+                <select id="gender" class="form-control">
+                  <option value="">Select</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="dateOfBirth">Date of Birth</label>
+                <input type="date" id="dateOfBirth" class="form-control"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="mobileNumber">Mobile Number *</label>
+                <input type="tel" id="mobileNumber" class="form-control"
+                  placeholder="10-digit mobile" readonly
+                  style="background:var(--surface-2);cursor:not-allowed;"/>
+                <span class="form-error hidden" id="mobileNumberError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="whatsappNumber">WhatsApp Number</label>
+                <input type="tel" id="whatsappNumber" class="form-control"
+                  placeholder="If different from mobile"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-control"
+                  placeholder="optional@email.com"/>
+                <span class="form-error hidden" id="emailError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="aadharNumber">
+                  Aadhar Number
+                  <span style="font-weight:400;color:var(--text-muted);
+                    text-transform:none;font-size:11px;">(Optional)</span>
+                </label>
+                <input type="text" id="aadharNumber" class="form-control"
+                  placeholder="XXXX XXXX XXXX" maxlength="14"
+                  oninput="formatAadhar(this)"/>
+                <span class="form-error hidden" id="aadharError"></span>
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label" for="address">Address</label>
+                <textarea id="address" class="form-control" rows="2"
+                  placeholder="Full address..."
+                  oninput="updateCharCount(this,'addressCount',200)"></textarea>
+                <div class="char-count"><span id="addressCount">0</span>/200</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SECTION 2: Visit Info -->
+          <div class="form-section">
+            <div class="form-section-title">📋 Visit Information</div>
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label class="form-label" for="visitorType">Visitor Type *</label>
+                <select id="visitorType" class="form-control"
+                  onchange="handleVisitorTypeChange()">
+                  <option value="">Select type</option>
+                  <option>Donor</option>
+                  <option>General Visitor</option>
+                  <option>Volunteer</option>
+                  <option>Trustee</option>
+                  <option>Special Child Inquiry</option>
+                  <option>Job Enquiry</option>
+                </select>
+                <span class="form-error hidden" id="visitorTypeError"></span>
+              </div>
+
+              <div class="form-group hidden" id="specialChildGroup">
+                <label class="form-label" for="specialChildType">Special Child Type *</label>
+                <select id="specialChildType" class="form-control">
+                  <option value="">Select type of special child</option>
+                  <option>Intellectual Disability</option>
+                  <option>Down Syndrome</option>
+                  <option>Autism Spectrum Disorder (ASD)</option>
+                  <option>Cerebral Palsy</option>
+                  <option>Hearing Impairment</option>
+                  <option>Visual Impairment</option>
+                  <option>Speech and Language Disorder</option>
+                  <option>Multiple Disabilities</option>
+                  <option>Learning Disability (Dyslexia/Dyscalculia)</option>
+                  <option>ADHD</option>
+                  <option>Locomotor Disable</option>
+                  <option>Other</option>
+                </select>
+                <span class="form-error hidden" id="specialChildTypeError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="visitDate">Visit Date *</label>
+                <input type="date" id="visitDate" class="form-control"/>
+                <span class="form-error hidden" id="visitDateError"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="referredBy">Referred By</label>
+                <input type="text" id="referredBy" class="form-control"
+                  placeholder="Person or organization"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="assignedStaff">Assigned Staff</label>
+                <input type="text" id="assignedStaff" class="form-control"
+                  placeholder="Staff member name"/>
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label" for="purposeOfVisit">Purpose of Visit *</label>
+                <textarea id="purposeOfVisit" class="form-control"
+                  placeholder="Describe the reason for this visit..."
+                  oninput="updateCharCount(this,'purposeCount',300)"></textarea>
+                <div class="char-count"><span id="purposeCount">0</span>/300</div>
+                <span class="form-error hidden" id="purposeOfVisitError"></span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SECTION 3: Follow-up -->
+          <div class="form-section">
+            <div class="form-section-title">⏰ Follow-up & Status</div>
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label class="form-label" for="workStatus">Work Status</label>
+                <select id="workStatus" class="form-control">
+                  <option value="">Select status</option>
+                  <option>Pending</option>
+                  <option>In Progress</option>
+                  <option>Completed</option>
+                  <option>Rejected</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="followUpDate">Follow-up Date</label>
+                <input type="date" id="followUpDate" class="form-control"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reminderDate">Reminder Date</label>
+                <input type="date" id="reminderDate" class="form-control"/>
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" class="form-control" rows="3"
+                  placeholder="Any additional notes or observations..."
+                  oninput="updateCharCount(this,'notesCount',500)"></textarea>
+                <div class="char-count"><span id="notesCount">0</span>/500</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-ghost" onclick="resetToMobileScreen()">← Change Number</button>
+            <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+            <button class="btn btn-primary btn-lg" id="saveBtn" onclick="saveVisitor()">
+              💾 Save Visitor
+            </button>
+          </div>
+
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import {
     getFirestore, collection, doc,
-    addDoc, updateDoc, getDoc, serverTimestamp
+    addDoc, updateDoc, getDoc, getDocs,
+    query, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import {
-    getStorage, ref, uploadBytes, getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-  
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
-  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
-  projectId: "astha-visitor-app-a1e26",
-  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
-  messagingSenderId: "672371493215",
-  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
-  measurementId: "G-MZ0FYNKET8"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+    authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+    projectId: "astha-visitor-app-a1e26",
+    storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+    messagingSenderId: "672371493215",
+    appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+    measurementId: "G-MZ0FYNKET8"
+  };
 
-  const app     = initializeApp(firebaseConfig);
-  const auth    = getAuth(app);
-  const db      = getFirestore(app);
-  const storage = getStorage(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  let editId       = null;
-  let photoFile    = null;
-  let selectedDocs = [];
-  let userRole     = "viewer";
+  let editId          = null;
+  let userRole        = "viewer";
+  let foundExistingId = null;
 
-  // ── Auth Guard ──────────────────────────────────
+  // ── Auth Guard ────────────────────────────────
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = "index.html"; return; }
+
     userRole = localStorage.getItem("userRole") || "viewer";
 
     if (userRole === "viewer") {
@@ -337,20 +485,202 @@ const firebaseConfig = {
       document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
     }
 
-    // Set default visit date to today
-    document.getElementById("visitDate").value = new Date().toISOString().split("T")[0];
+    document.getElementById("visitDate").value =
+      new Date().toISOString().split("T")[0];
 
-    // Check if editing
+    // Check edit mode INSIDE auth callback
     const params = new URLSearchParams(window.location.search);
     editId = params.get("id");
+
     if (editId) {
+      // Edit mode — skip mobile screen, go to form directly
       document.getElementById("pageTitle").textContent = "Edit Visitor";
-      document.querySelector(".topbar-title").textContent = "Edit Visitor";
+      showFormScreen();
       await loadVisitorForEdit(editId);
     }
+    // else: stay on mobile screen
   });
 
-  // ── Load for Edit ───────────────────────────────
+  // ── Check Mobile Number ───────────────────────
+  window.checkMobile = async function () {
+    const mobile = document.getElementById("mobileCheck").value.trim();
+    const errEl  = document.getElementById("mobileCheckError");
+
+    errEl.classList.add("hidden");
+    errEl.textContent = "";
+    document.getElementById("mobileCheck").classList.remove("error");
+
+    if (!mobile) {
+      errEl.textContent = "Mobile number is required";
+      errEl.classList.remove("hidden");
+      document.getElementById("mobileCheck").classList.add("error");
+      return;
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      errEl.textContent = "Enter a valid 10-digit mobile number";
+      errEl.classList.remove("hidden");
+      document.getElementById("mobileCheck").classList.add("error");
+      return;
+    }
+
+    const btn = document.getElementById("checkMobileBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Checking...`;
+
+    try {
+      const q    = query(collection(db,"visitors"), where("mobileNumber","==",mobile));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        // Returning visitor
+        const existing   = snap.docs[0];
+        const data       = existing.data();
+        foundExistingId  = existing.id;
+        const fullName   = `${data.firstName||""} ${data.lastName||""}`.trim() || "Unknown";
+        const lastVisit  = data.visitDate
+          ? new Date(data.visitDate).toLocaleDateString("en-IN",
+              {day:"2-digit",month:"short",year:"numeric"})
+          : "–";
+        const totalVisits = data.totalVisits || snap.size;
+
+        document.getElementById("returningVisitorCard").innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <div style="width:52px;height:52px;border-radius:50%;flex-shrink:0;
+              background:linear-gradient(135deg,var(--primary),var(--primary-light));
+              color:#fff;display:flex;align-items:center;justify-content:center;
+              font-size:22px;font-weight:700;">
+              ${fullName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:16px;">${fullName}</div>
+              <div style="font-size:12px;color:var(--text-muted);">
+                ${mobile} &nbsp;•&nbsp; ${data.visitorType||"–"}
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div style="background:var(--surface);border-radius:8px;
+              padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-muted);
+                text-transform:uppercase;letter-spacing:0.5px;">Last Visit</div>
+              <div style="font-weight:700;font-size:13px;margin-top:3px;">
+                ${lastVisit}</div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;
+              padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-muted);
+                text-transform:uppercase;letter-spacing:0.5px;">Total Visits</div>
+              <div style="font-weight:700;font-size:13px;margin-top:3px;
+                color:var(--primary);">${totalVisits}</div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;
+              padding:10px;text-align:center;">
+              <div style="font-size:10px;color:var(--text-muted);
+                text-transform:uppercase;letter-spacing:0.5px;">Status</div>
+              <div style="font-weight:700;font-size:13px;margin-top:3px;
+                color:${data.workStatus==="Completed"?"var(--primary)":"var(--accent)"};">
+                ${data.workStatus||"–"}
+              </div>
+            </div>
+          </div>`;
+
+        document.getElementById("returningVisitorModal").classList.remove("hidden");
+
+      } else {
+        // New visitor
+        document.getElementById("mobileNumber").value = mobile;
+        showFormScreen();
+        showToast("New visitor — please fill in the details", "info");
+      }
+
+    } catch (err) {
+      console.error("Mobile check error:", err);
+      showToast("Error checking database: " + err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "Continue →";
+    }
+  };
+
+  // ── New Entry (pre-fill from existing) ────────
+  window.proceedAsNewEntry = async function () {
+    document.getElementById("returningVisitorModal").classList.add("hidden");
+    const mobile = document.getElementById("mobileCheck").value.trim();
+    document.getElementById("mobileNumber").value = mobile;
+
+    if (foundExistingId) {
+      try {
+        const snap = await getDoc(doc(db, "visitors", foundExistingId));
+        if (snap.exists()) {
+          const d = snap.data();
+          const prefill = [
+            "firstName","middleName","lastName","gender",
+            "dateOfBirth","whatsappNumber","email","aadharNumber","address"
+          ];
+          prefill.forEach(f => {
+            const el = document.getElementById(f);
+            if (el && d[f]) {
+              el.value = d[f];
+              if (f === "address")
+                document.getElementById("addressCount").textContent = d[f].length;
+            }
+          });
+          const fullName = `${d.firstName||""} ${d.lastName||""}`.trim();
+          document.getElementById("viewPastLink").href =
+            `visitor-detail.html?id=${foundExistingId}`;
+          document.getElementById("returningBanner").classList.remove("hidden");
+          showToast("Basic info pre-filled from last visit ✅", "success");
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    document.getElementById("visitDate").value =
+      new Date().toISOString().split("T")[0];
+    ["purposeOfVisit","workStatus","followUpDate","reminderDate",
+     "notes","visitorType","referredBy","assignedStaff"].forEach(f => {
+      const el = document.getElementById(f);
+      if (el) el.value = "";
+    });
+    document.getElementById("purposeCount").textContent = "0";
+    document.getElementById("notesCount").textContent   = "0";
+    document.getElementById("specialChildGroup").classList.add("hidden");
+
+    foundExistingId = null;
+    showFormScreen();
+  };
+
+  // ── Go to Existing Record ─────────────────────
+  window.goToExistingEntry = function () {
+    if (foundExistingId) {
+      window.location.href = `visitor-form.html?id=${foundExistingId}`;
+    }
+    closeReturningModal();
+  };
+
+  window.closeReturningModal = function () {
+    document.getElementById("returningVisitorModal").classList.add("hidden");
+    foundExistingId = null;
+    const btn = document.getElementById("checkMobileBtn");
+    btn.disabled = false;
+    btn.innerHTML = "Continue →";
+  };
+
+  // ── Screen Switching ──────────────────────────
+  function showFormScreen() {
+    document.getElementById("mobileScreen").classList.add("hidden");
+    document.getElementById("visitorFormScreen").classList.remove("hidden");
+  }
+
+  window.resetToMobileScreen = function () {
+    document.getElementById("visitorFormScreen").classList.add("hidden");
+    document.getElementById("mobileScreen").classList.remove("hidden");
+    document.getElementById("mobileCheck").classList.remove("error");
+    document.getElementById("mobileCheckError").classList.add("hidden");
+    document.getElementById("returningBanner").classList.add("hidden");
+    foundExistingId = null;
+  };
+
+  // ── Load Visitor for Edit ─────────────────────
   async function loadVisitorForEdit(id) {
     showLoader();
     try {
@@ -363,176 +693,167 @@ const firebaseConfig = {
       const d = snap.data();
       const fields = [
         "firstName","middleName","lastName","gender","dateOfBirth",
-        "mobileNumber","whatsappNumber","email","address",
+        "mobileNumber","whatsappNumber","email","aadharNumber","address",
         "visitorType","visitDate","purposeOfVisit","referredBy","assignedStaff",
-        "workStatus","followUpDate","reminderDate","notes"
+        "specialChildType","workStatus","followUpDate","reminderDate","notes"
       ];
       fields.forEach(f => {
         const el = document.getElementById(f);
         if (el && d[f] !== undefined) el.value = d[f];
       });
+
       // Restore char counts
-      ["address","purposeOfVisit","notes"].forEach(f => {
+      const charFields = {
+        address:"addressCount",
+        purposeOfVisit:"purposeCount",
+        notes:"notesCount"
+      };
+      Object.entries(charFields).forEach(([f, countId]) => {
         const el = document.getElementById(f);
-        if (el) {
-          const countId = { address:"addressCount", purposeOfVisit:"purposeCount", notes:"notesCount" }[f];
-          if (countId) document.getElementById(countId).textContent = (el.value||"").length;
-        }
+        if (el && el.value)
+          document.getElementById(countId).textContent = el.value.length;
       });
-      if (d.photoURL) {
-        document.getElementById("photoPreview").innerHTML =
-          `<img src="${d.photoURL}" alt="photo"/>`;
+
+      if (d.visitorType === "Special Child Inquiry") {
+        document.getElementById("specialChildGroup").classList.remove("hidden");
       }
+
+      const aadharEl = document.getElementById("aadharNumber");
+      if (aadharEl && aadharEl.value) formatAadhar(aadharEl);
+
+      // Make mobile editable in edit mode
+      document.getElementById("mobileNumber").removeAttribute("readonly");
+      document.getElementById("mobileNumber").style.cssText = "";
+
     } catch (err) {
       showToast("Error loading visitor data", "error");
+      console.error(err);
     } finally {
       hideLoader();
     }
   }
 
-  // ── Photo Handling ──────────────────────────────
-  window.handlePhotoSelect = function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Photo must be under 2MB", "error");
-      return;
+  // ── Visitor Type Change ───────────────────────
+  window.handleVisitorTypeChange = function () {
+    const val   = document.getElementById("visitorType").value;
+    const group = document.getElementById("specialChildGroup");
+    if (val === "Special Child Inquiry") {
+      group.classList.remove("hidden");
+    } else {
+      group.classList.add("hidden");
+      document.getElementById("specialChildType").value = "";
     }
-    photoFile = file;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById("photoPreview").innerHTML =
-        `<img src="${ev.target.result}" alt="preview"/>`;
-    };
-    reader.readAsDataURL(file);
   };
 
-  // ── Document Handling ───────────────────────────
-  window.handleDocSelect = function (e) {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast(`${file.name} exceeds 5MB limit`, "warning");
-        return;
-      }
-      selectedDocs.push(file);
-      const tag = document.createElement("div");
-      tag.className = "badge badge-blue";
-      tag.style.gap = "6px";
-      tag.innerHTML = `📄 ${file.name.substring(0,20)}${file.name.length>20?"...":""}
-        <button onclick="removeDoc(${selectedDocs.length-1}, this.parentElement)"
-          style="background:none;border:none;cursor:pointer;font-size:12px;color:inherit;">✕</button>`;
-      document.getElementById("docList").appendChild(tag);
-    });
-  };
-
-  window.removeDoc = function (index, el) {
-    selectedDocs[index] = null;
-    el.remove();
-  };
-
-  // ── Save Visitor ────────────────────────────────
+  // ── Save ──────────────────────────────────────
   window.saveVisitor = async function () { await save(false); };
   window.saveDraft   = async function () { await save(true); };
 
   async function save(isDraft) {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  const btn = document.getElementById("saveBtn");
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span> Saving...`;
-  showLoader();
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Saving...`;
+    showLoader();
 
-  try {
-    // Upload photo only if selected
-    let photoURL = null;
-    if (photoFile) {
-      try {
-        const photoRef = ref(storage, `visitors/photos/${Date.now()}_${photoFile.name}`);
-        await uploadBytes(photoRef, photoFile);
-        photoURL = await getDownloadURL(photoRef);
-      } catch (uploadErr) {
-        console.warn("Photo upload failed, saving without photo:", uploadErr);
-        // Don't block the save — just skip the photo
+    try {
+      // Build data object from all form fields
+      const data = {
+        firstName:        document.getElementById("firstName").value.trim(),
+        middleName:       document.getElementById("middleName").value.trim(),
+        lastName:         document.getElementById("lastName").value.trim(),
+        gender:           document.getElementById("gender").value,
+        dateOfBirth:      document.getElementById("dateOfBirth").value,
+        mobileNumber:     document.getElementById("mobileNumber").value.trim(),
+        whatsappNumber:   document.getElementById("whatsappNumber").value.trim(),
+        email:            document.getElementById("email").value.trim(),
+        aadharNumber:     document.getElementById("aadharNumber").value.replace(/\s/g,""),
+        address:          document.getElementById("address").value.trim(),
+        visitorType:      document.getElementById("visitorType").value,
+        specialChildType: document.getElementById("specialChildType").value || "",
+        visitDate:        document.getElementById("visitDate").value,
+        purposeOfVisit:   document.getElementById("purposeOfVisit").value.trim(),
+        referredBy:       document.getElementById("referredBy").value.trim(),
+        assignedStaff:    document.getElementById("assignedStaff").value.trim(),
+        workStatus:       document.getElementById("workStatus").value || "Pending",
+        followUpDate:     document.getElementById("followUpDate").value,
+        reminderDate:     document.getElementById("reminderDate").value,
+        notes:            document.getElementById("notes").value.trim(),
+        isDraft:          isDraft,
+        updatedAt:        serverTimestamp(),
+      };
+
+      if (editId) {
+        // ── EDIT MODE: fetch existing doc, append visit to history ──
+        const existingSnap = await getDoc(doc(db, "visitors", editId));
+        if (!existingSnap.exists()) throw new Error("Visitor record not found");
+
+        const existingData   = existingSnap.data();
+        const oldHistory     = existingData.visitHistory  || [];
+        const oldTotalVisits = existingData.totalVisits   || 1;
+
+        // Build history entry for THIS visit
+        const visitEntry = {
+          visitDate:      data.visitDate,
+          purposeOfVisit: data.purposeOfVisit,
+          assignedStaff:  data.assignedStaff,
+          workStatus:     data.workStatus,
+          followUpDate:   data.followUpDate,
+          reminderDate:   data.reminderDate,
+          notes:          data.notes,
+          updatedBy:      localStorage.getItem("userName") || "Staff",
+          updatedAt:      new Date().toISOString(),
+        };
+
+        // Append to history and increment total
+        data.visitHistory = [...oldHistory, visitEntry];
+        data.totalVisits  = oldTotalVisits + 1;
+
+        await updateDoc(doc(db, "visitors", editId), data);
+        showToast(
+          `Visit #${data.totalVisits} recorded for ${data.firstName} ✅`,
+          "success"
+        );
+
+      } else {
+        // ── NEW VISITOR ──
+        data.createdAt    = serverTimestamp();
+        data.createdBy    = localStorage.getItem("userUID") || "";
+        data.visitHistory = [];
+        data.totalVisits  = 1;
+
+        const newRef = await addDoc(collection(db, "visitors"), data);
+        console.log("New visitor saved, ID:", newRef.id);
+        showToast(
+          isDraft ? "Draft saved! 📝" : "Visitor added successfully! ✅",
+          "success"
+        );
       }
+
+      setTimeout(() => window.location.href = "visitors.html", 1200);
+
+    } catch (err) {
+      console.error("SAVE ERROR:", err);
+      showToast("Save failed: " + err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = "💾 Save Visitor";
+      hideLoader();
     }
-
-    // Upload documents only if selected
-    const docURLs = [];
-    for (const file of selectedDocs) {
-      if (!file) continue;
-      try {
-        const docRef = ref(storage, `visitors/docs/${Date.now()}_${file.name}`);
-        await uploadBytes(docRef, file);
-        const url = await getDownloadURL(docRef);
-        docURLs.push({ name: file.name, url });
-      } catch (uploadErr) {
-        console.warn("Doc upload failed, skipping:", file.name, uploadErr);
-      }
-    }
-
-    // Build data — all form fields
-    const data = {
-      firstName:       document.getElementById("firstName").value.trim(),
-      middleName:      document.getElementById("middleName").value.trim(),
-      lastName:        document.getElementById("lastName").value.trim(),
-      gender:          document.getElementById("gender").value,
-      dateOfBirth:     document.getElementById("dateOfBirth").value,
-      mobileNumber:    document.getElementById("mobileNumber").value.trim(),
-      whatsappNumber:  document.getElementById("whatsappNumber").value.trim(),
-      email:           document.getElementById("email").value.trim(),
-      address:         document.getElementById("address").value.trim(),
-      visitorType:     document.getElementById("visitorType").value,
-      visitDate:       document.getElementById("visitDate").value,
-      purposeOfVisit:  document.getElementById("purposeOfVisit").value.trim(),
-      referredBy:      document.getElementById("referredBy").value.trim(),
-      assignedStaff:   document.getElementById("assignedStaff").value.trim(),
-      workStatus:      document.getElementById("workStatus").value || "Pending",
-      followUpDate:    document.getElementById("followUpDate").value,
-      reminderDate:    document.getElementById("reminderDate").value,
-      notes:           document.getElementById("notes").value.trim(),
-      isDraft:         isDraft,
-      updatedAt:       serverTimestamp(),
-    };
-
-    // Only add these if they have values
-    if (photoURL)       data.photoURL   = photoURL;
-    if (docURLs.length) data.documents  = docURLs;
-
-    if (editId) {
-      await updateDoc(doc(db, "visitors", editId), data);
-      showToast("Visitor updated successfully! ✅", "success");
-    } else {
-      data.createdAt = serverTimestamp();
-      data.createdBy = localStorage.getItem("userUID") || "";
-      const docRef = await addDoc(collection(db, "visitors"), data);
-      console.log("Visitor saved with ID:", docRef.id);
-      showToast(isDraft ? "Draft saved! 📝" : "Visitor added successfully! ✅", "success");
-    }
-
-    setTimeout(() => window.location.href = "visitors.html", 1200);
-
-  } catch (err) {
-    console.error("SAVE ERROR:", err);
-    showToast("Save failed: " + err.message, "error");
-    btn.disabled = false;
-    btn.innerHTML = "💾 Save Visitor";
-    hideLoader();
   }
-}
 
-  // ── Validation ──────────────────────────────────
+  // ── Validation ────────────────────────────────
   function validateForm() {
     clearErrors();
     let valid = true;
 
     const required = [
-      { id: "firstName",      errId: "firstNameError",      msg: "First name is required" },
-      { id: "lastName",       errId: "lastNameError",       msg: "Last name is required" },
-      { id: "mobileNumber",   errId: "mobileNumberError",   msg: "Mobile number is required" },
-      { id: "visitorType",    errId: "visitorTypeError",    msg: "Visitor type is required" },
-      { id: "visitDate",      errId: "visitDateError",      msg: "Visit date is required" },
-      { id: "purposeOfVisit", errId: "purposeOfVisitError", msg: "Purpose of visit is required" },
+      { id:"firstName",      errId:"firstNameError",      msg:"First name is required" },
+      { id:"lastName",       errId:"lastNameError",       msg:"Last name is required" },
+      { id:"mobileNumber",   errId:"mobileNumberError",   msg:"Mobile number is required" },
+      { id:"visitorType",    errId:"visitorTypeError",    msg:"Visitor type is required" },
+      { id:"visitDate",      errId:"visitDateError",      msg:"Visit date is required" },
+      { id:"purposeOfVisit", errId:"purposeOfVisitError", msg:"Purpose of visit is required" },
     ];
 
     required.forEach(({ id, errId, msg }) => {
@@ -544,25 +865,36 @@ const firebaseConfig = {
       }
     });
 
-    // Mobile validation
     const mobile = document.getElementById("mobileNumber").value.trim();
     if (mobile && !/^\d{10}$/.test(mobile)) {
       showFieldError("mobileNumberError", "Enter a valid 10-digit mobile number");
       valid = false;
     }
 
-    // Email validation
     const email = document.getElementById("email").value.trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       showFieldError("emailError", "Enter a valid email address");
       valid = false;
     }
 
+    const aadhar = document.getElementById("aadharNumber").value.replace(/\s/g,"");
+    if (aadhar && !/^\d{12}$/.test(aadhar)) {
+      showFieldError("aadharError", "Enter a valid 12-digit Aadhar number");
+      valid = false;
+    }
+
+    if (document.getElementById("visitorType").value === "Special Child Inquiry") {
+      if (!document.getElementById("specialChildType").value) {
+        showFieldError("specialChildTypeError", "Please select the type of special child");
+        document.getElementById("specialChildType").classList.add("error");
+        valid = false;
+      }
+    }
+
     if (!valid) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       showToast("Please fix the errors above", "error");
     }
-
     return valid;
   }
 
@@ -575,48 +907,66 @@ const firebaseConfig = {
     document.querySelectorAll(".form-error").forEach(el => {
       el.classList.add("hidden"); el.textContent = "";
     });
-    document.querySelectorAll(".form-control").forEach(el => el.classList.remove("error"));
+    document.querySelectorAll(".form-control").forEach(el =>
+      el.classList.remove("error"));
   }
 
-  // ── Helpers ─────────────────────────────────────
+  // ── Helpers ───────────────────────────────────
   window.updateCharCount = function (el, countId, max) {
-    const len = el.value.length;
-    document.getElementById(countId).textContent = len;
-    if (len > max) el.value = el.value.substring(0, max);
+    if (el.value.length > max) el.value = el.value.substring(0, max);
+    document.getElementById(countId).textContent = el.value.length;
   };
 
-  function showLoader() { document.getElementById("pageLoader").classList.remove("hidden"); }
-  function hideLoader() { document.getElementById("pageLoader").classList.add("hidden"); }
+  window.formatAadhar = function (el) {
+    let val = el.value.replace(/\D/g,"").substring(0,12);
+    if (val.length > 8)      val = val.replace(/(\d{4})(\d{4})(\d+)/,"$1 $2 $3");
+    else if (val.length > 4) val = val.replace(/(\d{4})(\d+)/,"$1 $2");
+    el.value = val;
+  };
+
+  function showLoader() {
+    document.getElementById("pageLoader").classList.remove("hidden");
+  }
+  function hideLoader() {
+    document.getElementById("pageLoader").classList.add("hidden");
+  }
 
   window.handleLogout = async function () {
-    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = "index.html";
   };
-  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
-  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+  window.openSidebar = () => {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+  };
+  window.closeSidebar = () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+  };
 </script>
 
 <script>
-  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  document.head.insertAdjacentHTML("beforeend",
+    "<style>.hidden{display:none!important}</style>");
   function showToast(msg, type="info", dur=4000) {
     const c = document.getElementById("toastContainer");
     const t = document.createElement("div");
-    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
-    t.className=`toast ${type}`;
-    t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
     c.appendChild(t);
-    setTimeout(()=>t.remove(),dur);
+    setTimeout(() => t.remove(), dur);
   }
 </script>
 
-<!-- PWA Registration -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
-        .catch(err => console.warn("[PWA] SW registration failed:", err));
+      navigator.serviceWorker.register("/sw.js");
     });
   }
 </script>
+
 </body>
 </html>

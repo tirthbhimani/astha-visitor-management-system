@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visitor Detail – Astha VMS</title>
   <link rel="stylesheet" href="css/main.css"/>
-
   <link rel="manifest" href="/manifest.json"/>
   <meta name="theme-color" content="#2E7D32"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
-
   <style>
     .detail-page { max-width: 800px; margin: 0 auto; }
+
     .detail-header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary));
       border-radius: var(--radius-lg);
@@ -35,31 +34,87 @@
       border: 3px solid rgba(255,255,255,0.4);
     }
     .detail-avatar img { width:100%; height:100%; object-fit:cover; }
-    .detail-name  { font-size:1.4rem; font-weight:700; color:#fff; }
-    .detail-sub   { color:rgba(255,255,255,0.75); font-size:14px; margin-top:4px; }
+    .detail-name   { font-size:1.4rem; font-weight:700; color:#fff; }
+    .detail-sub    { color:rgba(255,255,255,0.75); font-size:14px; margin-top:4px; }
     .detail-badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-    .detail-actions { margin-left: auto; display:flex; gap:10px; flex-shrink:0; }
+    .detail-actions { margin-left:auto; display:flex; gap:10px; flex-shrink:0; }
+
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
       margin-bottom: 20px;
     }
-    .info-item { background: var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; }
+    .info-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
     .info-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:4px; }
     .info-value { font-size:14px; font-weight:500; color:var(--text-primary); }
     .info-value a { color:var(--primary); text-decoration:none; }
-    .notes-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; }
+
+    .notes-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Visit History Timeline */
+    .timeline { padding: 4px 0; }
+    .timeline-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-dot-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 32px;
+      flex-shrink: 0;
+    }
+    .timeline-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .timeline-line {
+      width: 2px;
+      flex: 1;
+      background: var(--border);
+      margin-top: 4px;
+    }
+    .timeline-body { flex: 1; padding-bottom: 4px; }
+    .timeline-title { font-weight: 700; font-size: 14px; }
+    .timeline-date  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .timeline-desc  { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+    .timeline-note  { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+
     .wa-btn { background:#25D366; color:#fff; }
     .wa-btn:hover { background:#128C7E; }
+
+    .section-heading {
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
     @media (max-width:600px) {
       .info-grid { grid-template-columns: 1fr; }
       .detail-header { flex-direction: column; align-items: flex-start; }
-      .detail-actions { margin-left:0; }
+      .detail-actions { margin-left: 0; }
     }
   </style>
 </head>
-
 <body>
 
 <div class="page-loader hidden" id="pageLoader">
@@ -68,16 +123,25 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <div class="app-layout">
+
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><h2>🏠 Astha Trust</h2><p>Visitor Management</p></div>
+    <div class="sidebar-logo">
+      <h2>🏠 Astha Trust</h2>
+      <p>Visitor Management</p>
+    </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Main</div>
-      <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
-      <a href="visitors.html"  class="nav-item active"><span class="nav-icon">👥</span> Visitors</a>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"     class="nav-item active"><span class="nav-icon">👥</span> Visitors</a>
       <a href="visitor-form.html" class="nav-item"><span class="nav-icon">➕</span> Add Visitor</a>
       <div class="nav-section-title">Management</div>
-      <a href="reminders.html" class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
-      <a href="analytics.html" class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <a href="reminders.html"    class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html"    class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
+      <div class="nav-section-title admin-only">Admin</div>
+      <a href="settings.html" class="nav-item admin-only">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-info">
@@ -87,11 +151,13 @@
           <div class="user-role" id="sidebarUserRole">–</div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()"
+        style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+  <!-- Main Content -->
   <div class="main-content">
     <header class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
@@ -99,7 +165,8 @@
         <span class="topbar-title">Visitor Details</span>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-ghost btn-sm" onclick="window.location.href='visitors.html'">← Back</button>
+        <button class="btn btn-ghost btn-sm"
+          onclick="window.location.href='visitors.html'">← Back</button>
       </div>
     </header>
 
@@ -114,184 +181,422 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
- // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
-  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
-  projectId: "astha-visitor-app-a1e26",
-  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
-  messagingSenderId: "672371493215",
-  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
-  measurementId: "G-MZ0FYNKET8"
-};
-
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+    authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+    projectId: "astha-visitor-app-a1e26",
+    storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+    messagingSenderId: "672371493215",
+    appId: "1:672371493215:web:a2d68895f319db26ab8eea",
+    measurementId: "G-MZ0FYNKET8"
+  };
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
+  // ── Auth Guard ──────────────────────────────────
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = "index.html"; return; }
 
-    const userRole = localStorage.getItem("userRole") || "viewer";
-    const name     = localStorage.getItem("userName") || "User";
+    const role = localStorage.getItem("userRole") || "viewer";
+    const name = localStorage.getItem("userName")  || "User";
+
     document.getElementById("sidebarUserName").textContent = name;
     document.getElementById("sidebarUserRole").textContent =
-      userRole.charAt(0).toUpperCase() + userRole.slice(1);
+      role.charAt(0).toUpperCase() + role.slice(1);
     document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+
+    if (role !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
 
     const params = new URLSearchParams(window.location.search);
     const id     = params.get("id");
     if (!id) { window.location.href = "visitors.html"; return; }
 
-    await loadVisitor(id, userRole);
+    await loadVisitor(id, role);
   });
 
+  // ── Load Visitor ────────────────────────────────
   async function loadVisitor(id, role) {
     try {
       const snap = await getDoc(doc(db, "visitors", id));
+
       if (!snap.exists()) {
-        document.getElementById("detailContent").innerHTML =
-          `<div class="empty-state"><h3>Visitor not found</h3><a href="visitors.html" class="btn btn-primary" style="margin-top:16px;">← Back to List</a></div>`;
+        document.getElementById("detailContent").innerHTML = `
+          <div class="empty-state">
+            <h3>Visitor not found</h3>
+            <a href="visitors.html" class="btn btn-primary"
+              style="margin-top:16px;">← Back to List</a>
+          </div>`;
         return;
       }
 
       const d = snap.data();
-      const fullName = `${d.firstName||""} ${d.middleName||""} ${d.lastName||""}`.trim();
-      const initial  = fullName.charAt(0).toUpperCase();
 
-      const typeColors   = { "Donor":"badge-amber","Volunteer":"badge-green","Parent Inquiry":"badge-blue","General Visitor":"badge-gray","Sponsor":"badge-purple","Event Visitor":"badge-green","Special Child Inquiry":"badge-red" };
-      const statusColors = { "Pending":"badge-amber","In Progress":"badge-blue","Completed":"badge-green","Rejected":"badge-red" };
+      // ── Basic computed values ──────────────────
+      const fullName   = `${d.firstName||""} ${d.middleName||""} ${d.lastName||""}`.trim();
+      const initial    = fullName.charAt(0).toUpperCase() || "?";
+      const phone      = d.whatsappNumber || d.mobileNumber || "";
 
-      const phone     = d.whatsappNumber || d.mobileNumber || "";
-      const visitDate = d.visitDate ? new Date(d.visitDate).toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"}) : "–";
-      const dobStr    = d.dateOfBirth  ? new Date(d.dateOfBirth).toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"}) : "–";
-      const followStr = d.followUpDate ? new Date(d.followUpDate).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "–";
-      const remindStr = d.reminderDate ? new Date(d.reminderDate).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "–";
+      // ── Visit count from stored field ──────────
+      // Uses totalVisits stored on document (incremented on every edit)
+      const visitCount = d.totalVisits || 1;
 
-      const waMsg  = encodeURIComponent(`Hello ${d.firstName||fullName}, this is a message from Astha Charitable Trust (Astha Sneh Nu Ghar). We wanted to follow up regarding your recent visit. Please feel free to reach out to us anytime. Thank you!`);
-      const waLink = phone ? `https://wa.me/91${phone.replace(/\D/g,"")}?text=${waMsg}` : null;
+      // ── Date formatting ────────────────────────
+      const fmt = (dateStr, opts) =>
+        dateStr ? new Date(dateStr).toLocaleDateString("en-IN", opts) : "–";
 
-      const canEdit   = role === "admin" || role === "editor";
-      const canDelete = role === "admin";
+      const longOpts  = { day:"2-digit", month:"long",  year:"numeric" };
+      const shortOpts = { day:"2-digit", month:"short", year:"numeric" };
+      const weekOpts  = { weekday:"short", day:"2-digit", month:"short", year:"numeric" };
 
-      document.getElementById("detailContent").innerHTML = `
-        <!-- Header -->
-        <div class="detail-header">
-          <div class="detail-avatar">
-            ${d.photoURL ? `<img src="${d.photoURL}" alt="${fullName}"/>` : initial}
+      const visitDate = fmt(d.visitDate,    longOpts);
+      const dobStr    = fmt(d.dateOfBirth,  longOpts);
+      const followStr = fmt(d.followUpDate, shortOpts);
+      const remindStr = fmt(d.reminderDate, shortOpts);
+
+      // ── Badge colors ───────────────────────────
+      const typeColors = {
+        "Donor":"badge-amber", "Volunteer":"badge-green",
+        "Trustee":"badge-purple", "General Visitor":"badge-gray",
+        "Sponsor":"badge-purple", "Event Visitor":"badge-green",
+        "Special Child Inquiry":"badge-red", "Job Enquiry":"badge-blue"
+      };
+      const statusColors = {
+        "Pending":"badge-amber", "In Progress":"badge-blue",
+        "Completed":"badge-green", "Rejected":"badge-red"
+      };
+
+      // ── Permissions ────────────────────────────
+      const canEdit = role === "admin" || role === "editor";
+
+      // ── Visit History Timeline HTML ────────────
+      const history    = d.visitHistory || [];
+      const totalShown = history.length + 1; // +1 for original visit
+
+      const timelineItems = [];
+
+      // First visit (original document)
+      timelineItems.push(`
+        <div class="timeline-item">
+          <div class="timeline-dot-wrap">
+            <div class="timeline-dot" style="background:var(--primary);"></div>
+            ${totalShown > 1 ? `<div class="timeline-line"></div>` : ""}
           </div>
-          <div>
+          <div class="timeline-body">
+            <div class="timeline-title">
+              Visit #1 — First Visit
+              <span class="badge badge-green"
+                style="font-size:11px;margin-left:8px;">Original</span>
+            </div>
+            <div class="timeline-date">
+              📅 ${fmt(d.visitDate, weekOpts)}
+            </div>
+            <div class="timeline-desc">${d.purposeOfVisit || "–"}</div>
+            ${d.assignedStaff
+              ? `<div class="timeline-note">👤 ${d.assignedStaff}</div>`
+              : ""}
+            ${d.workStatus
+              ? `<div style="margin-top:8px;">
+                  <span class="badge ${statusColors[d.workStatus]||"badge-gray"}">
+                    ${d.workStatus}
+                  </span>
+                </div>`
+              : ""}
+          </div>
+        </div>`);
+
+      // Subsequent visits from visitHistory array
+      history.forEach((h, i) => {
+        const isLast = i === history.length - 1;
+        timelineItems.push(`
+          <div class="timeline-item">
+            <div class="timeline-dot-wrap">
+              <div class="timeline-dot" style="background:var(--accent);"></div>
+              ${!isLast ? `<div class="timeline-line"></div>` : ""}
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-title">Visit #${i + 2} — Return Visit</div>
+              <div class="timeline-date">
+                📅 ${fmt(h.visitDate, weekOpts)}
+                &nbsp;•&nbsp; Updated by: ${h.updatedBy || "Staff"}
+              </div>
+              <div class="timeline-desc">${h.purposeOfVisit || "–"}</div>
+              ${h.assignedStaff
+                ? `<div class="timeline-note">👤 ${h.assignedStaff}</div>`
+                : ""}
+              ${h.workStatus
+                ? `<div style="margin-top:8px;">
+                    <span class="badge ${statusColors[h.workStatus]||"badge-gray"}">
+                      ${h.workStatus}
+                    </span>
+                  </div>`
+                : ""}
+              ${h.notes
+                ? `<div class="timeline-note">
+                    📝 ${h.notes.substring(0,120)}${h.notes.length>120?"...":""}</div>`
+                : ""}
+            </div>
+          </div>`);
+      });
+
+      const historySection = `
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <h3>📅 Visit History</h3>
+            <span class="badge badge-green">${totalShown} total visit${totalShown!==1?"s":""}</span>
+          </div>
+          <div class="timeline">
+            ${timelineItems.join("")}
+          </div>
+        </div>`;
+
+      // ── Render full detail page ────────────────
+      document.getElementById("detailContent").innerHTML = `
+
+        <!-- Header Banner -->
+        <div class="detail-header">
+          <div class="detail-avatar">${initial}</div>
+          <div style="flex:1;min-width:0;">
             <div class="detail-name">${fullName || "Unknown"}</div>
-            <div class="detail-sub">${d.mobileNumber||"No mobile"} &nbsp;•&nbsp; Visited: ${visitDate}</div>
+            <div class="detail-sub">
+              ${d.mobileNumber || "No mobile"}
+              &nbsp;•&nbsp; Visited: ${visitDate}
+            </div>
             <div class="detail-badges">
-              ${d.visitorType ? `<span class="badge badge-amber">${d.visitorType}</span>` : ""}
-              ${d.workStatus  ? `<span class="badge ${statusColors[d.workStatus]||"badge-gray"}">${d.workStatus}</span>` : ""}
-              ${d.isDraft     ? `<span class="badge badge-gray">Draft</span>` : ""}
+              ${d.visitorType
+                ? `<span class="badge badge-amber">${d.visitorType}</span>`
+                : ""}
+              ${d.specialChildType
+                ? `<span class="badge badge-red"
+                    style="font-size:11px;">${d.specialChildType}</span>`
+                : ""}
+              ${d.workStatus
+                ? `<span class="badge ${statusColors[d.workStatus]||"badge-gray"}">
+                    ${d.workStatus}</span>`
+                : ""}
+              ${d.isDraft
+                ? `<span class="badge badge-gray">Draft</span>`
+                : ""}
+              <span class="badge badge-green"
+                style="background:rgba(255,255,255,0.2);color:#fff;">
+                🔄 ${visitCount} visit${visitCount!==1?"s":""}
+              </span>
             </div>
           </div>
           <div class="detail-actions">
-            ${waLink ? `<a href="${waLink}" target="_blank" class="btn wa-btn btn-sm">💬 WhatsApp</a>` : ""} }
-            ${canEdit ? `<a href="visitor-form.html?id=${id}" class="btn btn-outline btn-sm" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4);color:#fff;">✏️ Edit</a>` : ""}
+            ${phone ? `
+              <button class="btn wa-btn btn-sm"
+                onclick="showWAModal('${phone}',
+                  '${fullName.replace(/'/g,"\\'")}',
+                  '${(d.purposeOfVisit||"").replace(/'/g,"\\'")}')">
+                💬 WhatsApp
+              </button>` : ""}
+            ${canEdit
+              ? `<a href="visitor-form.html?id=${id}"
+                  class="btn btn-outline btn-sm"
+                  style="background:rgba(255,255,255,0.15);
+                         border-color:rgba(255,255,255,0.4);
+                         color:#fff;">
+                  ✏️ Edit
+                </a>`
+              : ""}
           </div>
         </div>
 
-        <!-- Basic Info -->
-        <h3 style="margin-bottom:12px; color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:0.8px;">👤 Basic Information</h3>
-        <div class="info-grid" style="margin-bottom:20px;">
-          <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${fullName||"–"}</div></div>
-          <div class="info-item"><div class="info-label">Gender</div><div class="info-value">${d.gender||"–"}</div></div>
-          <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${dobStr}</div></div>
-          <div class="info-item"><div class="info-label">Mobile Number</div><div class="info-value"><a href="tel:${d.mobileNumber}">${d.mobileNumber||"–"}</a></div></div>
-          <div class="info-item"><div class="info-label">WhatsApp</div><div class="info-value">${d.whatsappNumber||d.mobileNumber||"–"}</div></div>
-          <div class="info-item"><div class="info-label">Email</div><div class="info-value"><a href="mailto:${d.email}">${d.email||"–"}</a></div></div>
-          <div class="info-item" style="grid-column:1/-1"><div class="info-label">Address</div><div class="info-value">${d.address||"–"}</div></div>
+        <!-- Basic Information -->
+        <h3 class="section-heading">👤 Basic Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Full Name</div>
+            <div class="info-value">${fullName || "–"}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Gender</div>
+            <div class="info-value">${d.gender || "–"}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Date of Birth</div>
+            <div class="info-value">${dobStr}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Mobile Number</div>
+            <div class="info-value">
+              <a href="tel:${d.mobileNumber}">${d.mobileNumber || "–"}</a>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">WhatsApp</div>
+            <div class="info-value">${d.whatsappNumber || d.mobileNumber || "–"}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value">
+              <a href="mailto:${d.email}">${d.email || "–"}</a>
+            </div>
+          </div>
+          ${d.aadharNumber ? `
+          <div class="info-item">
+            <div class="info-label">Aadhar Number</div>
+            <div class="info-value" style="letter-spacing:2px;">
+              ${d.aadharNumber.replace(/(\d{4})(\d{4})(\d{4})/,"$1 $2 $3")}
+            </div>
+          </div>` : ""}
+          <div class="info-item" style="grid-column:1/-1">
+            <div class="info-label">Address</div>
+            <div class="info-value">${d.address || "–"}</div>
+          </div>
         </div>
 
-        <!-- Visit Info -->
-        <h3 style="margin-bottom:12px; color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:0.8px;">📋 Visit Information</h3>
-        <div class="info-grid" style="margin-bottom:20px;">
-          <div class="info-item"><div class="info-label">Visitor Type</div><div class="info-value">${d.visitorType||"–"}</div></div>
-          <div class="info-item"><div class="info-label">Visit Date</div><div class="info-value">${visitDate}</div></div>
-          <div class="info-item"><div class="info-label">Referred By</div><div class="info-value">${d.referredBy||"–"}</div></div>
-          <div class="info-item"><div class="info-label">Assigned Staff</div><div class="info-value">${d.assignedStaff||"–"}</div></div>
-          <div class="info-item" style="grid-column:1/-1"><div class="info-label">Purpose of Visit</div><div class="info-value">${d.purposeOfVisit||"–"}</div></div>
+        <!-- Visit Information -->
+        <h3 class="section-heading">📋 Visit Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Visitor Type</div>
+            <div class="info-value">${d.visitorType || "–"}</div>
+          </div>
+          ${d.specialChildType ? `
+          <div class="info-item">
+            <div class="info-label">Special Child Type</div>
+            <div class="info-value">${d.specialChildType}</div>
+          </div>` : ""}
+          <div class="info-item">
+            <div class="info-label">First Visit Date</div>
+            <div class="info-value">${visitDate}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Total Visits</div>
+            <div class="info-value"
+              style="color:var(--primary);font-weight:800;font-size:1.2rem;">
+              ${visitCount} time${visitCount!==1?"s":""}
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Referred By</div>
+            <div class="info-value">${d.referredBy || "–"}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Assigned Staff</div>
+            <div class="info-value">${d.assignedStaff || "–"}</div>
+          </div>
+          <div class="info-item" style="grid-column:1/-1">
+            <div class="info-label">Purpose of Visit</div>
+            <div class="info-value">${d.purposeOfVisit || "–"}</div>
+          </div>
         </div>
 
-        <!-- Follow-up -->
-        <h3 style="margin-bottom:12px; color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:0.8px;">⏰ Follow-up Status</h3>
-        <div class="info-grid" style="margin-bottom:20px;">
-          <div class="info-item"><div class="info-label">Work Status</div><div class="info-value"><span class="badge ${statusColors[d.workStatus]||"badge-gray"}">${d.workStatus||"–"}</span></div></div>
-          <div class="info-item"><div class="info-label">Follow-up Date</div><div class="info-value">${followStr}</div></div>
-          <div class="info-item"><div class="info-label">Reminder Date</div><div class="info-value">${remindStr}</div></div>
+        <!-- Follow-up Status -->
+        <h3 class="section-heading">⏰ Follow-up Status</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Work Status</div>
+            <div class="info-value">
+              <span class="badge ${statusColors[d.workStatus]||"badge-gray"}">
+                ${d.workStatus || "–"}
+              </span>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Follow-up Date</div>
+            <div class="info-value">${followStr}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Reminder Date</div>
+            <div class="info-value">${remindStr}</div>
+          </div>
         </div>
 
         <!-- Notes -->
         ${d.notes ? `
-        <div class="notes-section" style="margin-bottom:20px;">
-          <div class="form-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--primary);">📝 Notes</div>
-          <p style="font-size:14px; line-height:1.7; white-space:pre-wrap;">${d.notes}</p>
+        <div class="notes-section">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;
+            letter-spacing:0.8px;color:var(--primary);margin-bottom:10px;
+            padding-bottom:8px;border-bottom:2px solid var(--primary);">
+            📝 Notes
+          </div>
+          <p style="font-size:14px;line-height:1.7;white-space:pre-wrap;">
+            ${d.notes}
+          </p>
         </div>` : ""}
 
-        <!-- Documents -->
-        ${d.documents && d.documents.length ? `
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header"><h3>📎 Documents</h3></div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:4px;">
-            ${d.documents.map(doc => `
-              <a href="${doc.url}" target="_blank" class="btn btn-outline btn-sm">
-                📄 ${doc.name.substring(0,25)}${doc.name.length>25?"...":""}
-              </a>`).join("")}
-          </div>
-        </div>` : ""}
+        <!-- Visit History Timeline -->
+        ${historySection}
 
         <!-- Timestamps -->
-        <div style="text-align:right; color:var(--text-muted); font-size:12px; padding-top:8px;">
-          ${d.createdAt ? `Created: ${d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString("en-IN") : "–"}` : ""}
-          ${d.updatedAt ? ` &nbsp;•&nbsp; Updated: ${d.updatedAt.toDate ? d.updatedAt.toDate().toLocaleDateString("en-IN") : "–"}` : ""}
+        <div style="text-align:right;color:var(--text-muted);
+          font-size:12px;padding-top:8px;">
+          ${d.createdAt
+            ? `Created: ${d.createdAt.toDate
+                ? d.createdAt.toDate().toLocaleDateString("en-IN")
+                : "–"}`
+            : ""}
+          ${d.updatedAt
+            ? ` &nbsp;•&nbsp; Updated: ${d.updatedAt.toDate
+                ? d.updatedAt.toDate().toLocaleDateString("en-IN")
+                : "–"}`
+            : ""}
         </div>
       `;
 
     } catch (err) {
-      console.error(err);
-      showToast("Error loading visitor", "error");
+      console.error("Detail page error:", err);
+      showToast("Error loading visitor: " + err.message, "error");
     }
   }
 
+  // ── Sidebar + Logout ────────────────────────────
   window.handleLogout = async function () {
-    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = "index.html";
   };
-  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
-  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+  window.openSidebar = () => {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+  };
+  window.closeSidebar = () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+  };
 </script>
 
 <script>
-  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  document.head.insertAdjacentHTML("beforeend",
+    "<style>.hidden{display:none!important}</style>");
+
   function showToast(msg, type="info", dur=4000) {
-    const c=document.getElementById("toastContainer"),t=document.createElement("div");
-    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
-    t.className=`toast ${type}`;t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
-    c.appendChild(t);setTimeout(()=>t.remove(),dur);
+    const c = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), dur);
   }
 </script>
 
-<!-- PWA Registration -->
+<!-- WhatsApp utility -->
+<script src="js/whatsapp.js"></script>
+
+<!-- PWA -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
-        .catch(err => console.warn("[PWA] SW registration failed:", err));
+        .then(r => console.log("[PWA] SW registered:", r.scope))
+        .catch(e => console.warn("[PWA] SW failed:", e));
     });
   }
 </script>
 
-<script src="js/whatsapp.js"></script>
 </body>
 </html>

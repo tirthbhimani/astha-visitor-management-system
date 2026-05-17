@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Analytics – Astha VMS</title>
   <link rel="stylesheet" href="css/main.css"/>
-
   <link rel="manifest" href="/manifest.json"/>
   <meta name="theme-color" content="#2E7D32"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
-
   <style>
     .analytics-grid {
       display: grid;
@@ -37,7 +35,6 @@
       align-items: center;
       justify-content: space-between;
     }
-    /* Donut chart */
     .donut-wrap {
       display: flex;
       align-items: center;
@@ -49,15 +46,11 @@
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .legend-val { margin-left: auto; font-weight: 700; padding-left: 16px; }
-
-    /* Horizontal bar */
     .hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .hbar-label { font-size: 13px; color: var(--text-secondary); width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hbar-label { font-size: 13px; color: var(--text-secondary); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .hbar-track { flex: 1; height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
     .hbar-fill  { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
     .hbar-count { font-size: 12px; font-weight: 700; color: var(--text-secondary); width: 28px; text-align: right; }
-
-    /* Monthly trend */
     .trend-wrap { position: relative; height: 160px; display: flex; align-items: flex-end; gap: 6px; padding-bottom: 24px; }
     .trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
     .trend-bar {
@@ -87,8 +80,6 @@
     .trend-bar:hover .trend-bar-tooltip { display: block; }
     .trend-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
     .trend-val   { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
-
-    /* Status summary */
     .status-row {
       display: flex;
       align-items: center;
@@ -99,11 +90,9 @@
       font-size: 14px;
     }
     .status-row:last-child { margin-bottom: 0; }
-
-    /* KPI strip */
     .kpi-strip {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -116,11 +105,6 @@
     }
     .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; }
     .kpi-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-    .kpi-change { font-size: 12px; font-weight: 600; margin-top: 4px; }
-    .kpi-up   { color: var(--primary); }
-    .kpi-down { color: var(--danger); }
-
-    /* Export bar */
     .export-bar {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -133,7 +117,6 @@
       margin-bottom: 24px;
     }
     .export-bar-label { font-weight: 600; font-size: 14px; flex: 1; }
-
     @media (max-width: 900px) {
       .analytics-grid { grid-template-columns: 1fr; }
       .chart-card.full { grid-column: 1; }
@@ -154,16 +137,24 @@
 
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><h2>🏠 Astha Trust</h2><p>Visitor Management</p></div>
+    <div class="sidebar-logo">
+      <h2>🏠 Astha Trust</h2>
+      <p>Visitor Management</p>
+    </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Main</div>
       <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
       <a href="visitors.html"     class="nav-item"><span class="nav-icon">👥</span> Visitors</a>
-      <a href="visitor-form.html" class="nav-item" id="navAddVisitor"><span class="nav-icon">➕</span> Add Visitor</a>
+      <a href="visitor-form.html" class="nav-item" id="navAddVisitor">
+        <span class="nav-icon">➕</span> Add Visitor
+      </a>
       <div class="nav-section-title">Management</div>
       <a href="reminders.html"    class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
       <a href="analytics.html"    class="nav-item active"><span class="nav-icon">📈</span> Analytics</a>
-      <div class="nav-section-title admin-only"><a href="settings.html" class="nav-item admin-only"><span class="nav-icon">⚙️</span> Settings</a></div>
+      <div class="nav-section-title admin-only">Admin</div>
+      <a href="settings.html" class="nav-item admin-only">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-info">
@@ -173,7 +164,8 @@
           <div class="user-role" id="sidebarUserRole">–</div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()"
+        style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -191,7 +183,6 @@
 
     <main class="page-content">
 
-      <!-- Export Bar -->
       <div class="export-bar">
         <span class="export-bar-label">📤 Export Visitor Data</span>
         <button class="btn btn-outline btn-sm" onclick="exportExcel()">📊 Export Excel</button>
@@ -199,18 +190,16 @@
         <button class="btn btn-ghost btn-sm"   onclick="printVisitors()">🖨️ Print</button>
       </div>
 
-      <!-- KPI Strip -->
       <div class="kpi-strip" id="kpiStrip">
         <div class="kpi-card"><div class="kpi-value" style="color:var(--primary)">–</div><div class="kpi-label">Total Visitors</div></div>
         <div class="kpi-card"><div class="kpi-value" style="color:var(--accent)">–</div><div class="kpi-label">Total Donors</div></div>
         <div class="kpi-card"><div class="kpi-value" style="color:var(--info)">–</div><div class="kpi-label">Pending Follow-ups</div></div>
         <div class="kpi-card"><div class="kpi-value" style="color:var(--danger)">–</div><div class="kpi-label">This Month</div></div>
+        <div class="kpi-card"><div class="kpi-value" style="color:#6A1B9A">–</div><div class="kpi-label">Repeat Visitors</div></div>
       </div>
 
-      <!-- Charts Grid -->
       <div class="analytics-grid">
 
-        <!-- Visitor Type Donut -->
         <div class="chart-card">
           <div class="chart-title">👥 Visitor Types</div>
           <div class="donut-wrap" id="donutChart">
@@ -218,7 +207,6 @@
           </div>
         </div>
 
-        <!-- Work Status -->
         <div class="chart-card">
           <div class="chart-title">📋 Work Status Breakdown</div>
           <div id="statusChart">
@@ -226,11 +214,12 @@
           </div>
         </div>
 
-        <!-- Monthly Trend -->
         <div class="chart-card full">
           <div class="chart-title">
             📅 Monthly Visitor Trend
-            <select id="trendYear" onchange="renderTrend()" style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);">
+            <select id="trendYear" onchange="renderTrend()"
+              style="padding:4px 10px;border:1px solid var(--border);
+                border-radius:6px;font-size:12px;background:var(--surface);">
             </select>
           </div>
           <div class="trend-wrap" id="trendChart">
@@ -238,7 +227,6 @@
           </div>
         </div>
 
-        <!-- Top Visitor Types Bar -->
         <div class="chart-card">
           <div class="chart-title">🏷️ Type Distribution</div>
           <div id="hbarChart">
@@ -246,10 +234,16 @@
           </div>
         </div>
 
-        <!-- Referred By -->
         <div class="chart-card">
           <div class="chart-title">🔗 Top Referral Sources</div>
           <div id="referralChart">
+            <div class="spinner spinner-dark" style="margin:20px auto;"></div>
+          </div>
+        </div>
+
+        <div class="chart-card full">
+          <div class="chart-title">🔄 Visit Frequency</div>
+          <div id="frequencyChart">
             <div class="spinner spinner-dark" style="margin:20px auto;"></div>
           </div>
         </div>
@@ -259,41 +253,46 @@
   </div>
 </div>
 
-<!-- SheetJS for Excel export -->
+<!-- Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- jsPDF for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, query, orderBy }
+  import { getFirestore, collection, getDocs }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
+    authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
+    projectId: "astha-visitor-app-a1e26",
+    storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
+    messagingSenderId: "672371493215",
+    appId: "1:672371493215:web:a2d68895f319db26ab8eea"
+  };
 
- // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
-  authDomain: "astha-visitor-app-a1e26.firebaseapp.com",
-  projectId: "astha-visitor-app-a1e26",
-  storageBucket: "astha-visitor-app-a1e26.firebasestorage.app",
-  messagingSenderId: "672371493215",
-  appId: "1:672371493215:web:a2d68895f319db26ab8eea",
-  measurementId: "G-MZ0FYNKET8"
-};
-
-
-  const app = initializeApp(firebaseConfig);
+  const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
   let allVisitors = [];
 
-  const TYPE_COLORS = ["#2E7D32","#FF8F00","#1565C0","#6A1B9A","#C62828","#00695C","#E65100"];
-  const TYPES = ["Donor","General Visitor","Volunteer","Parent Inquiry","Sponsor","Event Visitor","Special Child Inquiry"];
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const TYPES = [
+    "Donor","General Visitor","Volunteer","Trustee",
+    "Sponsor","Event Visitor","Special Child Inquiry","Job Enquiry"
+  ];
+  const TYPE_COLORS = [
+    "#2E7D32","#FF8F00","#1565C0","#6A1B9A",
+    "#C62828","#00695C","#E65100","#00838F"
+  ];
+  const MONTHS = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
 
   // ── Auth Guard ────────────────────────────────────
   onAuthStateChanged(auth, (user) => {
@@ -301,19 +300,35 @@ const firebaseConfig = {
     const role = localStorage.getItem("userRole") || "viewer";
     const name = localStorage.getItem("userName") || "User";
     document.getElementById("sidebarUserName").textContent = name;
-    document.getElementById("sidebarUserRole").textContent = role.charAt(0).toUpperCase() + role.slice(1);
+    document.getElementById("sidebarUserRole").textContent =
+      role.charAt(0).toUpperCase() + role.slice(1);
     document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
-    if (role !== "admin") document.querySelectorAll(".admin-only").forEach(e => e.style.display="none");
-    if (role === "viewer") document.getElementById("navAddVisitor").style.display = "none";
+    if (role !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(e => e.style.display = "none");
+    }
+    if (role === "viewer") {
+      document.getElementById("navAddVisitor").style.display = "none";
+    }
     loadAnalytics();
   });
 
+  // ── Load All Data ─────────────────────────────────
   window.loadAnalytics = async function () {
     showLoader();
     try {
-      const snap = await getDocs(query(collection(db,"visitors"), orderBy("visitDate","desc")));
+      const snap  = await getDocs(collection(db, "visitors"));
       allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      window._allVisitors = allVisitors; // expose for export functions
+
+      // Sort by visitDate descending — client side, no index needed
+      allVisitors.sort((a, b) => {
+        if (!a.visitDate) return 1;
+        if (!b.visitDate) return -1;
+        return new Date(b.visitDate) - new Date(a.visitDate);
+      });
+
+      // Expose to export functions in non-module script
+      window._allVisitors = allVisitors;
+
       renderKPIs();
       renderDonut();
       renderStatusChart();
@@ -321,9 +336,11 @@ const firebaseConfig = {
       renderTrend();
       renderHBar();
       renderReferrals();
+      renderFrequency();
+
     } catch (err) {
-      console.error(err);
-      showToast("Error loading analytics", "error");
+      console.error("Analytics error:", err);
+      showToast("Error loading analytics: " + err.message, "error");
     } finally {
       hideLoader();
     }
@@ -331,19 +348,23 @@ const firebaseConfig = {
 
   // ── KPIs ──────────────────────────────────────────
   function renderKPIs() {
-    const total    = allVisitors.length;
-    const donors   = allVisitors.filter(v => v.visitorType === "Donor").length;
-    const pending  = allVisitors.filter(v => v.workStatus  === "Pending").length;
+    const total     = allVisitors.length;
+    const donors    = allVisitors.filter(v => v.visitorType === "Donor").length;
+    const pending   = allVisitors.filter(v => v.workStatus  === "Pending").length;
     const thisMonth = allVisitors.filter(v => {
       if (!v.visitDate) return false;
-      const d = new Date(v.visitDate);
-      const n = new Date();
+      const d = new Date(v.visitDate), n = new Date();
       return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
     }).length;
+    const repeat = allVisitors.filter(v => (v.totalVisits || 1) > 1).length;
 
-    const vals = [total, donors, pending, thisMonth];
-    const colors = ["var(--primary)","var(--accent)","var(--info)","var(--danger)"];
-    const labels = ["Total Visitors","Total Donors","Pending Follow-ups","This Month"];
+    const vals   = [total, donors, pending, thisMonth, repeat];
+    const colors = [
+      "var(--primary)","var(--accent)","var(--info)","var(--danger)","#6A1B9A"
+    ];
+    const labels = [
+      "Total Visitors","Total Donors","Pending Follow-ups","This Month","Repeat Visitors"
+    ];
 
     document.getElementById("kpiStrip").innerHTML = vals.map((v, i) => `
       <div class="kpi-card">
@@ -352,26 +373,26 @@ const firebaseConfig = {
       </div>`).join("");
   }
 
-  // ── Donut Chart (SVG) ─────────────────────────────
+  // ── Donut Chart ───────────────────────────────────
   function renderDonut() {
     const counts = {};
     TYPES.forEach(t => counts[t] = 0);
-    allVisitors.forEach(v => { if (counts[v.visitorType] !== undefined) counts[v.visitorType]++; });
+    allVisitors.forEach(v => {
+      if (counts[v.visitorType] !== undefined) counts[v.visitorType]++;
+    });
     const total = allVisitors.length || 1;
 
     const SIZE = 140, CX = 70, CY = 70, R = 50, SW = 22;
-    const circumference = 2 * Math.PI * R;
+    const C    = 2 * Math.PI * R;
     let offset = 0;
 
     const arcs = TYPES.map((t, i) => {
-      const pct  = counts[t] / total;
-      const dash = pct * circumference;
+      const dash = (counts[t] / total) * C;
       const arc  = `<circle cx="${CX}" cy="${CY}" r="${R}"
         fill="none" stroke="${TYPE_COLORS[i]}" stroke-width="${SW}"
-        stroke-dasharray="${dash} ${circumference - dash}"
+        stroke-dasharray="${dash} ${C - dash}"
         stroke-dashoffset="${-offset}"
-        transform="rotate(-90 ${CX} ${CY})"
-        style="transition:stroke-dasharray 0.8s ease;"/>`;
+        transform="rotate(-90 ${CX} ${CY})"/>`;
       offset += dash;
       return arc;
     });
@@ -384,25 +405,31 @@ const firebaseConfig = {
       </div>`).join("");
 
     document.getElementById("donutChart").innerHTML = `
-      <svg class="donut-svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--surface-2)" stroke-width="${SW}"/>
+      <svg class="donut-svg" width="${SIZE}" height="${SIZE}"
+        viewBox="0 0 ${SIZE} ${SIZE}">
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+          stroke="var(--surface-2)" stroke-width="${SW}"/>
         ${arcs.join("")}
-        <text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="middle"
-          font-size="20" font-weight="800" fill="var(--text-primary)">${total}</text>
-        <text x="${CX}" y="${CY+16}" text-anchor="middle" dominant-baseline="middle"
-          font-size="9" fill="var(--text-muted)">TOTAL</text>
+        <text x="${CX}" y="${CY}" text-anchor="middle"
+          dominant-baseline="middle" font-size="20" font-weight="800"
+          fill="var(--text-primary)">${total}</text>
+        <text x="${CX}" y="${CY+16}" text-anchor="middle"
+          dominant-baseline="middle" font-size="9"
+          fill="var(--text-muted)">TOTAL</text>
       </svg>
       <div class="donut-legend">${legend}</div>`;
   }
 
-  // ── Status Chart ───────────────────────────────────
+  // ── Status Chart ──────────────────────────────────
   function renderStatusChart() {
     const statuses = ["Pending","In Progress","Completed","Rejected"];
     const colors   = ["#FF8F00","#1565C0","#2E7D32","#C62828"];
     const bgs      = ["#FFF8E1","#E3F2FD","#E8F5E9","#FFEBEE"];
     const counts   = {};
     statuses.forEach(s => counts[s] = 0);
-    allVisitors.forEach(v => { if (v.workStatus && counts[v.workStatus]!==undefined) counts[v.workStatus]++; });
+    allVisitors.forEach(v => {
+      if (v.workStatus && counts[v.workStatus] !== undefined) counts[v.workStatus]++;
+    });
     const total = allVisitors.length || 1;
 
     document.getElementById("statusChart").innerHTML = statuses.map((s, i) => {
@@ -411,76 +438,81 @@ const firebaseConfig = {
         <div class="status-row" style="background:${bgs[i]};">
           <span style="font-weight:600;color:${colors[i]};">${s}</span>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:100px;height:8px;background:rgba(0,0,0,0.08);border-radius:4px;overflow:hidden;">
-              <div style="width:${pct}%;height:100%;background:${colors[i]};border-radius:4px;transition:width 0.8s ease;"></div>
+            <div style="width:100px;height:8px;background:rgba(0,0,0,0.08);
+              border-radius:4px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:${colors[i]};
+                border-radius:4px;"></div>
             </div>
-            <span style="font-weight:700;color:${colors[i]};width:32px;text-align:right;">${counts[s]}</span>
-            <span style="font-size:11px;color:var(--text-muted);width:36px;">${pct}%</span>
+            <span style="font-weight:700;color:${colors[i]};
+              width:32px;text-align:right;">${counts[s]}</span>
+            <span style="font-size:11px;color:var(--text-muted);
+              width:36px;">${pct}%</span>
           </div>
         </div>`;
     }).join("");
   }
 
-  // ── Monthly Trend ──────────────────────────────────
+  // ── Monthly Trend ─────────────────────────────────
   function renderTrendYearSelect() {
-    const years = [...new Set(allVisitors
-      .filter(v => v.visitDate)
-      .map(v => new Date(v.visitDate).getFullYear())
-    )].sort((a,b) => b - a);
+    const years = [...new Set(
+      allVisitors.filter(v => v.visitDate)
+                 .map(v => new Date(v.visitDate).getFullYear())
+    )].sort((a, b) => b - a);
 
     if (!years.length) years.push(new Date().getFullYear());
 
     const sel = document.getElementById("trendYear");
     sel.innerHTML = years.map(y =>
-      `<option value="${y}" ${y===new Date().getFullYear()?"selected":""}>${y}</option>`
+      `<option value="${y}" ${y === new Date().getFullYear() ? "selected" : ""}>${y}</option>`
     ).join("");
   }
 
   window.renderTrend = function () {
-    const year = parseInt(document.getElementById("trendYear").value) || new Date().getFullYear();
+    const year   = parseInt(document.getElementById("trendYear").value)
+                   || new Date().getFullYear();
     const counts = Array(12).fill(0);
     allVisitors.forEach(v => {
       if (!v.visitDate) return;
       const d = new Date(v.visitDate);
       if (d.getFullYear() === year) counts[d.getMonth()]++;
     });
-
     const maxVal = Math.max(...counts, 1);
 
-    document.getElementById("trendChart").innerHTML =
-      counts.map((c, i) => {
-        const heightPct = (c / maxVal) * 100;
-        return `
-          <div class="trend-bar-wrap">
-            <div class="trend-val">${c > 0 ? c : ""}</div>
-            <div class="trend-bar" style="height:${heightPct}%;">
-              <div class="trend-bar-tooltip">${MONTHS[i]}: ${c} visitor${c!==1?"s":""}</div>
-            </div>
-            <div class="trend-label">${MONTHS[i]}</div>
-          </div>`;
-      }).join("");
+    document.getElementById("trendChart").innerHTML = counts.map((c, i) => `
+      <div class="trend-bar-wrap">
+        <div class="trend-val">${c > 0 ? c : ""}</div>
+        <div class="trend-bar" style="height:${(c/maxVal)*100}%;">
+          <div class="trend-bar-tooltip">
+            ${MONTHS[i]}: ${c} visitor${c !== 1 ? "s" : ""}
+          </div>
+        </div>
+        <div class="trend-label">${MONTHS[i]}</div>
+      </div>`).join("");
   };
 
-  // ── Horizontal Bar – Type Distribution ────────────
+  // ── Type Distribution HBar ────────────────────────
   function renderHBar() {
     const counts = {};
     TYPES.forEach(t => counts[t] = 0);
-    allVisitors.forEach(v => { if (counts[v.visitorType] !== undefined) counts[v.visitorType]++; });
+    allVisitors.forEach(v => {
+      if (counts[v.visitorType] !== undefined) counts[v.visitorType]++;
+    });
     const maxVal = Math.max(...Object.values(counts), 1);
-    const sorted = TYPES.map((t,i) => ({t, c: counts[t], color: TYPE_COLORS[i]}))
-                        .sort((a,b) => b.c - a.c);
+    const sorted = TYPES.map((t, i) => ({ t, c: counts[t], color: TYPE_COLORS[i] }))
+                        .sort((a, b) => b.c - a.c);
 
-    document.getElementById("hbarChart").innerHTML = sorted.map(({t, c, color}) => `
+    document.getElementById("hbarChart").innerHTML = sorted.map(({ t, c, color }) => `
       <div class="hbar-row">
         <div class="hbar-label" title="${t}">${t}</div>
         <div class="hbar-track">
-          <div class="hbar-fill" style="width:${(c/maxVal)*100}%;background:${color};"></div>
+          <div class="hbar-fill"
+            style="width:${(c/maxVal)*100}%;background:${color};"></div>
         </div>
         <div class="hbar-count">${c}</div>
       </div>`).join("");
   }
 
-  // ── Referral Sources ───────────────────────────────
+  // ── Referral Sources ──────────────────────────────
   function renderReferrals() {
     const counts = {};
     allVisitors.forEach(v => {
@@ -488,13 +520,11 @@ const firebaseConfig = {
       if (r) counts[r] = (counts[r] || 0) + 1;
     });
 
-    const sorted = Object.entries(counts)
-      .sort((a,b) => b[1] - a[1])
-      .slice(0, 8);
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
     if (!sorted.length) {
       document.getElementById("referralChart").innerHTML =
-        `<div class="empty-state"><p>No referral data recorded yet</p></div>`;
+        `<div class="empty-state"><p>No referral data yet</p></div>`;
       return;
     }
 
@@ -503,68 +533,130 @@ const firebaseConfig = {
       <div class="hbar-row">
         <div class="hbar-label" title="${ref}">${ref}</div>
         <div class="hbar-track">
-          <div class="hbar-fill" style="width:${(count/maxVal)*100}%;background:var(--primary);"></div>
+          <div class="hbar-fill"
+            style="width:${(count/maxVal)*100}%;background:var(--primary);"></div>
         </div>
         <div class="hbar-count">${count}</div>
       </div>`).join("");
   }
 
-  // ── Logout + sidebar ──────────────────────────────
-  window.handleLogout = async () => { await signOut(auth); localStorage.clear(); window.location.href="index.html"; };
-  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
-  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+  // ── Visit Frequency ───────────────────────────────
+  function renderFrequency() {
+    const freq = {};
+    allVisitors.forEach(v => {
+      const count = v.totalVisits || 1;
+      freq[count] = (freq[count] || 0) + 1;
+    });
+
+    const container = document.getElementById("frequencyChart");
+
+    if (!Object.keys(freq).length) {
+      container.innerHTML = `<div class="empty-state"><p>No data yet</p></div>`;
+      return;
+    }
+
+    const maxPeople = Math.max(...Object.values(freq));
+    const repeat    = allVisitors.filter(v => (v.totalVisits || 1) > 1).length;
+
+    container.innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:12px;
+        height:140px;padding-bottom:24px;">
+        ${Object.entries(freq).sort((a, b) => a[0] - b[0]).map(([times, people]) => {
+          const h = (people / maxPeople) * 100;
+          return `
+            <div style="display:flex;flex-direction:column;
+              align-items:center;gap:4px;flex:1;">
+              <div style="font-size:12px;font-weight:700;
+                color:var(--text-secondary);">${people}</div>
+              <div style="width:100%;background:var(--primary);
+                border-radius:4px 4px 0 0;height:${h}%;min-height:4px;"></div>
+              <div style="font-size:11px;color:var(--text-muted);
+                white-space:nowrap;">
+                ${times}x visit${times > 1 ? "s" : ""}
+              </div>
+            </div>`;
+        }).join("")}
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);text-align:center;">
+        ${repeat} visitor${repeat !== 1 ? "s have" : " has"} visited more than once
+      </p>`;
+  }
+
+  // ── Sidebar + Logout ──────────────────────────────
+  window.handleLogout = async () => {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.href = "index.html";
+  };
+  window.openSidebar = () => {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+  };
+  window.closeSidebar = () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+  };
   function showLoader() { document.getElementById("pageLoader").classList.remove("hidden"); }
   function hideLoader() { document.getElementById("pageLoader").classList.add("hidden"); }
 </script>
 
-<!-- Export functions (non-module, needs access to _allVisitors) -->
+<!-- Export functions — non-module so they can access _allVisitors -->
 <script>
-  document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
+  document.head.insertAdjacentHTML("beforeend",
+    "<style>.hidden{display:none!important}</style>");
 
   function showToast(msg, type="info", dur=4000) {
-    const c=document.getElementById("toastContainer"),t=document.createElement("div");
-    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
-    t.className=`toast ${type}`;t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
-    c.appendChild(t);setTimeout(()=>t.remove(),dur);
+    const c = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), dur);
   }
 
-  // ── Excel Export ─────────────────────────────────
+  // ── Excel Export ──────────────────────────────────
   function exportExcel() {
     const visitors = window._allVisitors;
-    if (!visitors || !visitors.length) { showToast("No data to export", "warning"); return; }
+    if (!visitors || !visitors.length) {
+      showToast("No data to export", "warning"); return;
+    }
 
     const rows = visitors.map(v => ({
-      "First Name":      v.firstName    || "",
-      "Middle Name":     v.middleName   || "",
-      "Last Name":       v.lastName     || "",
-      "Gender":          v.gender       || "",
-      "Date of Birth":   v.dateOfBirth  || "",
-      "Mobile Number":   v.mobileNumber || "",
-      "WhatsApp Number": v.whatsappNumber || "",
-      "Email":           v.email        || "",
-      "Address":         v.address      || "",
-      "Visitor Type":    v.visitorType  || "",
-      "Visit Date":      v.visitDate    || "",
-      "Purpose":         v.purposeOfVisit || "",
-      "Referred By":     v.referredBy   || "",
-      "Assigned Staff":  v.assignedStaff || "",
-      "Work Status":     v.workStatus   || "",
-      "Follow-up Date":  v.followUpDate || "",
-      "Reminder Date":   v.reminderDate || "",
-      "Notes":           v.notes        || "",
+      "First Name":         v.firstName        || "",
+      "Middle Name":        v.middleName       || "",
+      "Last Name":          v.lastName         || "",
+      "Gender":             v.gender           || "",
+      "Date of Birth":      v.dateOfBirth      || "",
+      "Mobile Number":      v.mobileNumber     || "",
+      "WhatsApp Number":    v.whatsappNumber   || "",
+      "Email":              v.email            || "",
+      "Aadhar Number":      v.aadharNumber     || "",
+      "Address":            v.address          || "",
+      "Visitor Type":       v.visitorType      || "",
+      "Special Child Type": v.specialChildType || "",
+      "Visit Date":         v.visitDate        || "",
+      "Purpose of Visit":   v.purposeOfVisit   || "",
+      "Referred By":        v.referredBy       || "",
+      "Assigned Staff":     v.assignedStaff    || "",
+      "Work Status":        v.workStatus       || "",
+      "Follow-up Date":     v.followUpDate     || "",
+      "Reminder Date":      v.reminderDate     || "",
+      "Notes":              v.notes            || "",
+      "Total Visits":       v.totalVisits      || 1,
+      "Is Draft":           v.isDraft ? "Yes" : "No",
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
-
-    // Column widths
     ws["!cols"] = [
-      {wch:12},{wch:12},{wch:12},{wch:8},{wch:12},
-      {wch:14},{wch:14},{wch:22},{wch:30},{wch:18},
-      {wch:12},{wch:30},{wch:16},{wch:16},{wch:12},
-      {wch:13},{wch:13},{wch:40}
+      {wch:14},{wch:14},{wch:14},{wch:10},{wch:14},
+      {wch:16},{wch:16},{wch:24},{wch:16},{wch:32},
+      {wch:20},{wch:24},{wch:14},{wch:36},{wch:18},
+      {wch:18},{wch:14},{wch:14},{wch:14},{wch:40},
+      {wch:12},{wch:10}
     ];
 
-    // Header row styling via SheetJS
+    // Green header row
     const range = XLSX.utils.decode_range(ws["!ref"]);
     for (let C = range.s.c; C <= range.e.c; C++) {
       const addr = XLSX.utils.encode_cell({ r: 0, c: C });
@@ -580,29 +672,30 @@ const firebaseConfig = {
     XLSX.utils.book_append_sheet(wb, ws, "Visitors");
 
     // Summary sheet
-    const summary = [
+    const ws2 = XLSX.utils.aoa_to_sheet([
       ["Astha Charitable Trust – Visitor Export"],
       ["Generated:", new Date().toLocaleDateString("en-IN")],
-      ["Total Visitors:", visitors.length],
-      ["Donors:", visitors.filter(v=>v.visitorType==="Donor").length],
-      ["Pending Follow-ups:", visitors.filter(v=>v.workStatus==="Pending").length],
-    ];
-    const ws2 = XLSX.utils.aoa_to_sheet(summary);
+      ["Total Records:", visitors.length],
+      ["Donors:", visitors.filter(v => v.visitorType === "Donor").length],
+      ["Pending Follow-ups:", visitors.filter(v => v.workStatus === "Pending").length],
+      ["Repeat Visitors:", visitors.filter(v => (v.totalVisits||1) > 1).length],
+    ]);
     XLSX.utils.book_append_sheet(wb, ws2, "Summary");
 
     XLSX.writeFile(wb, `Astha_Visitors_${new Date().toISOString().split("T")[0]}.xlsx`);
-    showToast("Excel exported successfully! 📊", "success");
+    showToast("Excel exported! 📊", "success");
   }
 
   // ── PDF Export ────────────────────────────────────
   function exportPDF() {
     const visitors = window._allVisitors;
-    if (!visitors || !visitors.length) { showToast("No data to export", "warning"); return; }
+    if (!visitors || !visitors.length) {
+      showToast("No data to export", "warning"); return;
+    }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const doc = new jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
 
-    // Header
     doc.setFillColor(27, 94, 32);
     doc.rect(0, 0, 297, 22, "F");
     doc.setTextColor(255, 255, 255);
@@ -611,18 +704,20 @@ const firebaseConfig = {
     doc.text("Astha Charitable Trust – Visitor Report", 14, 10);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN")}   |   Total: ${visitors.length} visitors`, 14, 17);
+    doc.text(
+      `Generated: ${new Date().toLocaleDateString("en-IN")}` +
+      `   |   Total: ${visitors.length} visitors`, 14, 17
+    );
 
-    // Table
-    const headers = [["Name","Mobile","Type","Visit Date","Status","Purpose","Follow-up"]];
-    const rows = visitors.map(v => [
+    const headers = [["Name","Mobile","Type","Visit Date","Total Visits","Status","Purpose"]];
+    const rows    = visitors.map(v => [
       `${v.firstName||""} ${v.lastName||""}`.trim() || "Unknown",
-      v.mobileNumber   || "–",
-      v.visitorType    || "–",
-      v.visitDate      ? new Date(v.visitDate).toLocaleDateString("en-IN") : "–",
-      v.workStatus     || "–",
-      (v.purposeOfVisit||"–").substring(0,40),
-      v.followUpDate   ? new Date(v.followUpDate).toLocaleDateString("en-IN") : "–",
+      v.mobileNumber  || "–",
+      v.visitorType   || "–",
+      v.visitDate     ? new Date(v.visitDate).toLocaleDateString("en-IN") : "–",
+      String(v.totalVisits || 1),
+      v.workStatus    || "–",
+      (v.purposeOfVisit || "–").substring(0, 40),
     ]);
 
     doc.autoTable({
@@ -630,20 +725,14 @@ const firebaseConfig = {
       head: headers,
       body: rows,
       styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [46, 125, 50], textColor: 255, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [240, 244, 248] },
+      headStyles: { fillColor:[46,125,50], textColor:255, fontStyle:"bold" },
+      alternateRowStyles: { fillColor:[240,244,248] },
       columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 28 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 24 },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 80 },
-        6: { cellWidth: 24 },
+        0:{cellWidth:32}, 1:{cellWidth:26}, 2:{cellWidth:28},
+        3:{cellWidth:22}, 4:{cellWidth:16}, 5:{cellWidth:20}, 6:{cellWidth:70}
       },
-      margin: { left: 14, right: 14 },
+      margin: { left:14, right:14 },
       didDrawPage: (data) => {
-        // Footer on each page
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.text(
@@ -654,58 +743,61 @@ const firebaseConfig = {
     });
 
     doc.save(`Astha_Visitors_${new Date().toISOString().split("T")[0]}.pdf`);
-    showToast("PDF exported successfully! 📄", "success");
+    showToast("PDF exported! 📄", "success");
   }
 
   // ── Print ─────────────────────────────────────────
   function printVisitors() {
     const visitors = window._allVisitors;
-    if (!visitors || !visitors.length) { showToast("No data to print", "warning"); return; }
+    if (!visitors || !visitors.length) {
+      showToast("No data to print", "warning"); return;
+    }
 
     const rows = visitors.map(v => `
       <tr>
         <td>${`${v.firstName||""} ${v.lastName||""}`.trim()||"Unknown"}</td>
         <td>${v.mobileNumber||"–"}</td>
         <td>${v.visitorType||"–"}</td>
-        <td>${v.visitDate ? new Date(v.visitDate).toLocaleDateString("en-IN") : "–"}</td>
+        <td>${v.visitDate
+          ? new Date(v.visitDate).toLocaleDateString("en-IN") : "–"}</td>
+        <td>${v.totalVisits||1}</td>
         <td>${v.workStatus||"–"}</td>
         <td>${(v.purposeOfVisit||"–").substring(0,60)}</td>
       </tr>`).join("");
 
-    const html = `
-      <!DOCTYPE html><html><head><title>Astha VMS – Visitor Report</title>
+    const win = window.open("", "_blank");
+    win.document.write(`
+      <!DOCTYPE html><html><head>
+      <title>Astha VMS – Visitor Report</title>
       <style>
-        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
-        h2   { color: #1B5E20; margin-bottom: 4px; }
-        p    { color: #666; margin-bottom: 16px; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #1B5E20; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; }
-        td { padding: 7px 10px; border-bottom: 1px solid #eee; }
-        tr:nth-child(even) { background: #f5f5f5; }
-        @media print { body { margin: 10px; } }
+        body{font-family:Arial,sans-serif;font-size:12px;margin:20px;}
+        h2{color:#1B5E20;margin-bottom:4px;}
+        p{color:#666;margin-bottom:16px;font-size:11px;}
+        table{width:100%;border-collapse:collapse;}
+        th{background:#1B5E20;color:#fff;padding:8px 10px;text-align:left;font-size:11px;}
+        td{padding:7px 10px;border-bottom:1px solid #eee;}
+        tr:nth-child(even){background:#f5f5f5;}
       </style></head><body>
       <h2>Astha Charitable Trust – Visitor Report</h2>
-      <p>Generated: ${new Date().toLocaleDateString("en-IN")} &nbsp;|&nbsp; Total: ${visitors.length} visitors</p>
+      <p>Generated: ${new Date().toLocaleDateString("en-IN")}
+         &nbsp;|&nbsp; Total: ${visitors.length} visitors</p>
       <table>
-        <thead><tr><th>Name</th><th>Mobile</th><th>Type</th><th>Visit Date</th><th>Status</th><th>Purpose</th></tr></thead>
+        <thead><tr>
+          <th>Name</th><th>Mobile</th><th>Type</th>
+          <th>Visit Date</th><th>Visits</th><th>Status</th><th>Purpose</th>
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      </body></html>`;
-
-    const win = window.open("", "_blank");
-    win.document.write(html);
+      </body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 500);
   }
 </script>
 
-<!-- PWA Registration -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
-        .catch(err => console.warn("[PWA] SW registration failed:", err));
+      navigator.serviceWorker.register("/sw.js");
     });
   }
 </script>

@@ -1,117 +1,79 @@
 // =============================================
-// Astha VMS – Service Worker
-// Caches static assets for offline shell
-// Dynamic data (Firebase) stays online-only
+// Astha VMS – Service Worker v2
+// Minimal caching — always fetch fresh HTML/JS/CSS
 // =============================================
 
-const CACHE_NAME   = "astha-vms-v1";
-const CACHE_STATIC = "astha-static-v1";
+const CACHE_NAME = "astha-vms-v2";
 
-// Static assets to cache on install
-const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/dashboard.html",
-  "/visitors.html",
-  "/visitor-form.html",
-  "/visitor-detail.html",
-  "/reminders.html",
-  "/analytics.html",
-  "/css/main.css",
-  "/css/auth.css",
-  "/css/dashboard.css",
-  "/js/whatsapp.js",
-  "/manifest.json",
+// Only cache third-party CDN libraries — never your own files
+const CDN_CACHE = [
+  "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"
 ];
 
-// ── Install: cache static shell ────────────────
+// Install — cache only CDN libraries
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_STATIC).then((cache) => {
-      console.log("[SW] Caching static assets");
-      return cache.addAll(STATIC_ASSETS);
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(CDN_CACHE).catch(err => {
+        console.warn("[SW] CDN cache failed:", err);
+      });
     })
   );
+  // Take over immediately — don't wait for old SW to die
   self.skipWaiting();
 });
 
-// ── Activate: clean old caches ─────────────────
+// Activate — delete ALL old caches immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k !== CACHE_STATIC && k !== CACHE_NAME)
-          .map((k) => caches.delete(k))
-      )
-    )
+      Promise.all(keys.map((k) => {
+        console.log("[SW] Deleting old cache:", k);
+        return caches.delete(k);
+      }))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// ── Fetch: cache-first for static, network-first for Firebase ──
+// Fetch strategy:
+// - Your own files (HTML/CSS/JS) → ALWAYS network first, never serve from cache
+// - Firebase APIs → ALWAYS network, never cache
+// - CDN libraries → cache first (they never change)
 self.addEventListener("fetch", (event) => {
   const url = event.request.url;
 
-  // Always network for Firebase APIs
+  // Never intercept Firebase requests
   if (
     url.includes("firebaseapp.com") ||
     url.includes("googleapis.com") ||
     url.includes("gstatic.com") ||
-    url.includes("firestore.googleapis.com")
+    url.includes("firestore.googleapis.com") ||
+    url.includes("identitytoolkit")
   ) {
-    return; // Let browser handle Firebase requests normally
+    return;
   }
 
-  // Cache-first for static assets
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request)
-        .then((response) => {
-          // Cache valid GET responses
-          if (
-            event.request.method === "GET" &&
-            response.status === 200 &&
-            !url.includes("chrome-extension")
-          ) {
-            const clone = response.clone();
-            caches.open(CACHE_STATIC).then((c) => c.put(event.request, clone));
-          }
+  // CDN libraries — cache first
+  if (url.includes("cdnjs.cloudflare.com")) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           return response;
-        })
-        .catch(() => {
-          // Offline fallback for HTML pages
-          if (event.request.destination === "document") {
-            return caches.match("/index.html");
-          }
         });
+      })
+    );
+    return;
+  }
+
+  // YOUR files — network always, no cache
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      // Only fall back to cache if completely offline
+      return caches.match(event.request);
     })
-  );
-});
-
-// ── Push Notifications (future use) ────────────
-self.addEventListener("push", (event) => {
-  const data = event.data ? event.data.json() : {};
-  const options = {
-    body: data.body || "You have a new reminder from Astha VMS",
-    icon: "/assets/icons/icon-192.png",
-    badge: "/assets/icons/icon-192.png",
-    vibrate: [200, 100, 200],
-    data: { url: data.url || "/reminders.html" },
-  };
-  event.waitUntil(
-    self.registration.showNotification(
-      data.title || "Astha VMS Reminder",
-      options
-    )
-  );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url || "/reminders.html")
   );
 });

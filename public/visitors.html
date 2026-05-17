@@ -4,15 +4,41 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visitors – Astha VMS</title>
-  <link rel="stylesheet" href="css/main.css"/>
-
   <link rel="manifest" href="/manifest.json"/>
   <meta name="theme-color" content="#2E7D32"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Astha VMS"/>
-
+  <link rel="stylesheet" href="css/main.css"/>
   <style>
+    /* ── Tabs ── */
+    .page-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+    .page-tab-btn {
+      padding: 9px 20px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .page-tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Filters ── */
     .filters-bar {
       display: flex;
       flex-wrap: wrap;
@@ -31,8 +57,9 @@
       cursor: pointer;
       min-height: 44px;
     }
-    .filter-select:focus { outline: none; border-color: var(--primary); }
+    .filter-select:focus { outline:none; border-color:var(--primary); }
 
+    /* ── Visitor Cards ── */
     .visitor-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -45,7 +72,6 @@
       cursor: pointer;
     }
     .visitor-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-
     .vc-avatar {
       width: 48px; height: 48px;
       border-radius: 50%;
@@ -60,13 +86,45 @@
     .vc-sub  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
     .vc-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
     .vc-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .visitors-grid { display: flex; flex-direction: column; gap: 10px; }
 
-    .visitors-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
+    /* ── App User Cards ── */
+    .user-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: box-shadow 0.2s;
     }
+    .user-card:hover { box-shadow: var(--shadow-md); }
+    .user-card-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .user-card-body { flex: 1; min-width: 0; }
+    .user-card-name  { font-weight: 700; font-size: 16px; }
+    .user-card-email { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .user-card-meta  { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+    .user-card-stats {
+      display: flex;
+      gap: 16px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .ucs-item { }
+    .ucs-val   { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .ucs-label { font-size: 11px; color: var(--text-muted); }
 
+    .users-grid { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Pagination ── */
     .pagination {
       display: flex;
       align-items: center;
@@ -76,6 +134,7 @@
     }
     .page-info { font-size: 13px; color: var(--text-muted); }
 
+    /* ── Delete Modal ── */
     .delete-confirm-body p { margin-bottom: 12px; }
     .delete-confirm-body .warn { color: var(--danger); font-weight: 600; }
 
@@ -84,10 +143,11 @@
       .filters-bar .search-box { width: 100%; }
       .filters-bar .search-box input { width: 100%; }
       .vc-actions .btn span { display: none; }
+      .user-card-stats { display: none; }
+      .page-tabs { width: 100%; }
+      .page-tab-btn { flex: 1; text-align: center; }
     }
   </style>
-
-  
 </head>
 <body>
 
@@ -96,7 +156,7 @@
 </div>
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Delete Confirm Modal -->
+<!-- Delete Modal -->
 <div class="modal-overlay hidden" id="deleteModal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
@@ -105,17 +165,19 @@
     </div>
     <div class="modal-body delete-confirm-body">
       <p>Are you sure you want to delete <strong id="deleteVisitorName"></strong>?</p>
-      <p class="warn">⚠️ This action cannot be undone. All visitor data will be permanently removed.</p>
+      <p class="warn">⚠️ This action cannot be undone.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
-      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Delete Permanently</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+        Delete Permanently
+      </button>
     </div>
   </div>
 </div>
 
 <div class="app-layout">
-  <!-- Sidebar (same structure as dashboard) -->
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <h2>🏠 Astha Trust</h2>
@@ -123,22 +185,14 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Main</div>
-      <a href="dashboard.html" class="nav-item">
-        <span class="nav-icon">📊</span> Dashboard
-      </a>
-      <a href="visitors.html" class="nav-item active">
-        <span class="nav-icon">👥</span> Visitors
-      </a>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="visitors.html"     class="nav-item active"><span class="nav-icon">👥</span> Visitors</a>
       <a href="visitor-form.html" class="nav-item" id="navAddVisitor">
         <span class="nav-icon">➕</span> Add Visitor
       </a>
       <div class="nav-section-title">Management</div>
-      <a href="reminders.html" class="nav-item">
-        <span class="nav-icon">🔔</span> Reminders
-      </a>
-      <a href="analytics.html" class="nav-item">
-        <span class="nav-icon">📈</span> Analytics
-      </a>
+      <a href="reminders.html"    class="nav-item"><span class="nav-icon">🔔</span> Reminders</a>
+      <a href="analytics.html"    class="nav-item"><span class="nav-icon">📈</span> Analytics</a>
       <div class="nav-section-title admin-only" id="adminSection">Admin</div>
       <a href="settings.html" class="nav-item admin-only">
         <span class="nav-icon">⚙️</span> Settings
@@ -152,9 +206,8 @@
           <div class="user-role" id="sidebarUserRole">–</div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()" style="color:rgba(255,255,255,0.7);">
-        🚪 Sign Out
-      </button>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()"
+        style="color:rgba(255,255,255,0.7);">🚪 Sign Out</button>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -163,7 +216,7 @@
     <header class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="hamburger" onclick="openSidebar()">☰</button>
-        <span class="topbar-title">Visitors</span>
+        <span class="topbar-title">Visitors & Users</span>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-primary btn-sm" id="topAddBtn"
@@ -175,57 +228,97 @@
 
     <main class="page-content">
 
-      <!-- Filters -->
-      <div class="filters-bar">
-        <div class="search-box" style="flex:1; min-width:200px;">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Search by name or mobile..."
-            oninput="applyFilters()"/>
-        </div>
-        <select class="filter-select" id="filterType" onchange="applyFilters()">
-          <option value="">All Types</option>
-          <option>Donor</option>
-          <option>General Visitor</option>
-          <option>Volunteer</option>
-          <option>Parent Inquiry</option>
-          <option>Sponsor</option>
-          <option>Event Visitor</option>
-          <option>Special Child Inquiry</option>
-        </select>
-        <select class="filter-select" id="filterStatus" onchange="applyFilters()">
-          <option value="">All Status</option>
-          <option>Pending</option>
-          <option>In Progress</option>
-          <option>Completed</option>
-          <option>Rejected</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
-        <span class="page-info" id="resultCount"></span>
+      <!-- Page Tabs -->
+      <div class="page-tabs">
+        <button class="page-tab-btn active" id="tabVisitors"
+          onclick="switchPageTab('visitors')">
+          👥 Visitors
+          <span class="badge badge-green" id="visitorCountBadge" style="margin-left:4px;"></span>
+        </button>
+        <button class="page-tab-btn" id="tabAppUsers"
+          onclick="switchPageTab('appUsers')">
+          👤 App Users
+          <span class="badge badge-blue" id="userCountBadge" style="margin-left:4px;"></span>
+        </button>
       </div>
 
-      <!-- Visitor List -->
-      <div id="visitorsContainer">
-        <div class="empty-state">
-          <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+      <!-- ── TAB: VISITORS ── -->
+      <div class="tab-content active" id="contentVisitors">
+
+        <div class="filters-bar">
+          <div class="search-box" style="flex:1;min-width:200px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput"
+              placeholder="Search by name, mobile or Aadhar..."
+              oninput="applyFilters()"/>
+          </div>
+          <select class="filter-select" id="filterType" onchange="applyFilters()">
+            <option value="">All Types</option>
+            <option>Donor</option>
+            <option>General Visitor</option>
+            <option>Volunteer</option>
+            <option>Trustee</option>
+            <option>Special Child Inquiry</option>
+            <option>Job Enquiry</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">All Status</option>
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+            <option>Rejected</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
+          <span class="page-info" id="resultCount"></span>
         </div>
+
+        <div id="visitorsContainer">
+          <div class="empty-state">
+            <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+          </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
       </div>
 
-      <!-- Pagination -->
-      <div class="pagination" id="pagination"></div>
+      <!-- ── TAB: APP USERS ── -->
+      <div class="tab-content" id="contentAppUsers">
+        <div class="filters-bar">
+          <div class="search-box" style="flex:1;min-width:200px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="userSearchInput"
+              placeholder="Search by name or email..."
+              oninput="filterUsers()"/>
+          </div>
+          <select class="filter-select" id="filterUserRole" onchange="filterUsers()">
+            <option value="">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+          <span class="page-info" id="userResultCount"></span>
+        </div>
+
+        <div id="appUsersContainer">
+          <div class="empty-state">
+            <div class="spinner spinner-dark" style="margin:0 auto;"></div>
+          </div>
+        </div>
+      </div>
 
     </main>
   </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import {
-    getFirestore, collection, getDocs, doc, deleteDoc,
-    query, orderBy
+    getFirestore, collection, getDocs, doc, deleteDoc, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  
  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBmJy24vn55E_7oYzHZa-b45_5yAIr66II",
@@ -242,7 +335,9 @@ const firebaseConfig = {
   const db   = getFirestore(app);
 
   let allVisitors  = [];
+  let allAppUsers  = [];
   let filteredList = [];
+  let filteredUsers = [];
   let currentPage  = 1;
   const PAGE_SIZE  = 15;
   let deleteTargetId = null;
@@ -254,6 +349,7 @@ const firebaseConfig = {
     userRole = localStorage.getItem("userRole") || "viewer";
     initPage();
     loadVisitors();
+    loadAppUsers();
   });
 
   function initPage() {
@@ -271,29 +367,47 @@ const firebaseConfig = {
       document.getElementById("topAddBtn").style.display = "none";
     }
 
-    // Pre-fill search from URL
     const params = new URLSearchParams(window.location.search);
     if (params.get("search")) {
       document.getElementById("searchInput").value = params.get("search");
     }
   }
 
-  // ── Load All Visitors ───────────────────────────
+  // ── Load Visitors ───────────────────────────────
   async function loadVisitors() {
     try {
-      const q    = query(collection(db, "visitors"), orderBy("visitDate", "desc"));
-      const snap = await getDocs(q);
+      const snap = await getDocs(
+        query(collection(db, "visitors"), orderBy("visitDate", "desc"))
+      );
       allVisitors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById("visitorCountBadge").textContent = allVisitors.length;
       applyFilters();
     } catch (err) {
       console.error(err);
       showToast("Error loading visitors", "error");
       document.getElementById("visitorsContainer").innerHTML =
-        `<div class="empty-state"><p style="color:var(--danger)">Failed to load data. Check console.</p></div>`;
+        `<div class="empty-state"><p style="color:var(--danger)">
+          Failed to load. Check console.</p></div>`;
     }
   }
 
-  // ── Filter & Search ─────────────────────────────
+  // ── Load App Users ───────────────────────────────
+  async function loadAppUsers() {
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      allAppUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById("userCountBadge").textContent = allAppUsers.length;
+      filteredUsers = [...allAppUsers];
+      renderAppUsers();
+    } catch (err) {
+      console.error(err);
+      document.getElementById("appUsersContainer").innerHTML =
+        `<div class="empty-state"><p style="color:var(--danger)">
+          Failed to load users.</p></div>`;
+    }
+  }
+
+  // ── Filter Visitors ─────────────────────────────
   window.applyFilters = function () {
     const search = document.getElementById("searchInput").value.toLowerCase().trim();
     const type   = document.getElementById("filterType").value;
@@ -302,7 +416,11 @@ const firebaseConfig = {
     filteredList = allVisitors.filter(v => {
       const name   = `${v.firstName||""} ${v.middleName||""} ${v.lastName||""}`.toLowerCase();
       const mobile = (v.mobileNumber || "").toLowerCase();
-      const matchSearch = !search || name.includes(search) || mobile.includes(search);
+      const aadhar = (v.aadharNumber || "").replace(/\s/g,"");
+      const matchSearch = !search ||
+        name.includes(search) ||
+        mobile.includes(search) ||
+        aadhar.includes(search.replace(/\s/g,""));
       const matchType   = !type   || v.visitorType === type;
       const matchStatus = !status || v.workStatus  === status;
       return matchSearch && matchType && matchStatus;
@@ -319,39 +437,64 @@ const firebaseConfig = {
     applyFilters();
   };
 
-  // ── Render Page ─────────────────────────────────
+  // ── Filter App Users ─────────────────────────────
+  window.filterUsers = function () {
+    const search = document.getElementById("userSearchInput").value.toLowerCase().trim();
+    const role   = document.getElementById("filterUserRole").value;
+
+    filteredUsers = allAppUsers.filter(u => {
+      const name  = (u.name  || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const matchSearch = !search || name.includes(search) || email.includes(search);
+      const matchRole   = !role   || u.role === role;
+      return matchSearch && matchRole;
+    });
+
+    renderAppUsers();
+  };
+
+  // ── Render Visitors ─────────────────────────────
   function renderPage() {
-    const total  = filteredList.length;
-    const start  = (currentPage - 1) * PAGE_SIZE;
-    const end    = Math.min(start + PAGE_SIZE, total);
-    const page   = filteredList.slice(start, end);
+    const total = filteredList.length;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filteredList.slice(start, Math.min(start + PAGE_SIZE, total));
 
     document.getElementById("resultCount").textContent =
-      total > 0 ? `${total} visitor${total !== 1 ? "s" : ""}` : "";
+      total > 0 ? `${total} visitor${total!==1?"s":""}` : "";
 
     const container = document.getElementById("visitorsContainer");
 
-    if (page.length === 0) {
+    if (!page.length) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">👥</div>
           <h3>No visitors found</h3>
           <p>Try changing your search or filters</p>
-          ${userRole !== "viewer" ? `<a href="visitor-form.html" class="btn btn-primary" style="margin-top:16px;">+ Add First Visitor</a>` : ""}
+          ${userRole !== "viewer"
+            ? `<a href="visitor-form.html" class="btn btn-primary"
+                style="margin-top:16px;">+ Add First Visitor</a>`
+            : ""}
         </div>`;
       document.getElementById("pagination").innerHTML = "";
       return;
     }
 
     const typeColors = {
-      "Donor":"badge-amber","Volunteer":"badge-green","Parent Inquiry":"badge-blue",
-      "General Visitor":"badge-gray","Sponsor":"badge-purple",
-      "Event Visitor":"badge-green","Special Child Inquiry":"badge-red"
+      "Donor":"badge-amber","Volunteer":"badge-green","Trustee":"badge-purple",
+      "General Visitor":"badge-gray","Special Child Inquiry":"badge-red",
+      "Job Enquiry":"badge-blue"
     };
     const statusColors = {
       "Pending":"badge-amber","In Progress":"badge-blue",
       "Completed":"badge-green","Rejected":"badge-red"
     };
+
+    // Build visit count map for all visitors
+    const visitCountMap = {};
+    allVisitors.forEach(v => {
+      if (v.mobileNumber)
+        visitCountMap[v.mobileNumber] = (visitCountMap[v.mobileNumber]||0)+1;
+    });
 
     container.innerHTML = `<div class="visitors-grid">` +
       page.map(v => {
@@ -360,26 +503,47 @@ const firebaseConfig = {
         const tColor  = typeColors[v.visitorType]  || "badge-gray";
         const sColor  = statusColors[v.workStatus] || "badge-gray";
         const date    = v.visitDate
-          ? new Date(v.visitDate).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})
+          ? new Date(v.visitDate).toLocaleDateString("en-IN",
+              {day:"2-digit",month:"short",year:"numeric"})
           : "–";
-        const canEdit   = userRole === "admin" || userRole === "editor";
-        const canDelete = userRole === "admin";
+        const visits    = v.mobileNumber ? (visitCountMap[v.mobileNumber]||1) : 1;
+        const canEdit   = userRole==="admin" || userRole==="editor";
+        const canDelete = userRole==="admin";
 
         return `
-          <div class="visitor-card" onclick="window.location.href='visitor-detail.html?id=${v.id}'">
+          <div class="visitor-card"
+            onclick="window.location.href='visitor-detail.html?id=${v.id}'">
             <div class="vc-avatar">${initial}</div>
             <div class="vc-body">
               <div class="vc-name">${name}</div>
-              <div class="vc-sub">${v.mobileNumber || "No mobile"} &nbsp;•&nbsp; ${date}</div>
+              <div class="vc-sub">
+                ${v.mobileNumber||"No mobile"} &nbsp;•&nbsp; ${date}
+                ${visits > 1
+                  ? `&nbsp;•&nbsp; <span style="color:var(--primary);font-weight:600;">
+                      🔄 ${visits} visits</span>`
+                  : ""}
+              </div>
               <div class="vc-meta">
-                <span class="badge ${tColor}">${v.visitorType || "–"}</span>
-                ${v.workStatus ? `<span class="badge ${sColor}">${v.workStatus}</span>` : ""}
-                ${v.purposeOfVisit ? `<span style="font-size:12px;color:var(--text-muted);">📋 ${v.purposeOfVisit.substring(0,40)}${v.purposeOfVisit.length>40?"...":""}</span>` : ""}
+                <span class="badge ${tColor}">${v.visitorType||"–"}</span>
+                ${v.specialChildType
+                  ? `<span class="badge badge-red" style="font-size:11px;">
+                      ${v.specialChildType}</span>`
+                  : ""}
+                ${v.workStatus
+                  ? `<span class="badge ${sColor}">${v.workStatus}</span>`
+                  : ""}
               </div>
             </div>
             <div class="vc-actions" onclick="event.stopPropagation()">
-              ${canEdit ? `<a href="visitor-form.html?id=${v.id}" class="btn btn-outline btn-sm">✏️ <span>Edit</span></a>` : ""}
-              ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="openDeleteModal('${v.id}','${name.replace(/'/g,"\\'")}')">🗑️</button>` : ""}
+              ${canEdit
+                ? `<a href="visitor-form.html?id=${v.id}"
+                    class="btn btn-outline btn-sm">✏️ <span>Edit</span></a>`
+                : ""}
+              ${canDelete
+                ? `<button class="btn btn-danger btn-sm"
+                    onclick="openDeleteModal('${v.id}',
+                    '${name.replace(/'/g,"\\'")}')">🗑️</button>`
+                : ""}
             </div>
           </div>`;
       }).join("") + `</div>`;
@@ -392,15 +556,18 @@ const firebaseConfig = {
     const pag   = document.getElementById("pagination");
     if (pages <= 1) { pag.innerHTML = ""; return; }
 
-    let html = `<button class="btn btn-ghost btn-sm" onclick="goPage(${currentPage-1})" ${currentPage===1?"disabled":""}>← Prev</button>`;
-    for (let i = 1; i <= pages; i++) {
-      if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
-        html += `<button class="btn ${i===currentPage?"btn-primary":"btn-ghost"} btn-sm" onclick="goPage(${i})">${i}</button>`;
-      } else if (Math.abs(i - currentPage) === 2) {
+    let html = `<button class="btn btn-ghost btn-sm"
+      onclick="goPage(${currentPage-1})" ${currentPage===1?"disabled":""}>← Prev</button>`;
+    for (let i=1; i<=pages; i++) {
+      if (i===1 || i===pages || Math.abs(i-currentPage)<=1) {
+        html += `<button class="btn ${i===currentPage?"btn-primary":"btn-ghost"} btn-sm"
+          onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i-currentPage)===2) {
         html += `<span style="color:var(--text-muted)">…</span>`;
       }
     }
-    html += `<button class="btn btn-ghost btn-sm" onclick="goPage(${currentPage+1})" ${currentPage===pages?"disabled":""}>Next →</button>`;
+    html += `<button class="btn btn-ghost btn-sm"
+      onclick="goPage(${currentPage+1})" ${currentPage===pages?"disabled":""}>Next →</button>`;
     pag.innerHTML = html;
   }
 
@@ -412,18 +579,103 @@ const firebaseConfig = {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Delete Modal ────────────────────────────────
+  // ── Render App Users ─────────────────────────────
+  function renderAppUsers() {
+    const container = document.getElementById("appUsersContainer");
+    document.getElementById("userResultCount").textContent =
+      filteredUsers.length > 0 ? `${filteredUsers.length} user${filteredUsers.length!==1?"s":""}` : "";
+
+    if (!filteredUsers.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">👤</div>
+          <h3>No users found</h3>
+          <p>Add users from the Settings page</p>
+          ${userRole==="admin"
+            ? `<a href="settings.html" class="btn btn-primary"
+                style="margin-top:16px;">Go to Settings</a>`
+            : ""}
+        </div>`;
+      return;
+    }
+
+    // Count visitors added per user (by createdBy field)
+    const addedByMap = {};
+    allVisitors.forEach(v => {
+      if (v.createdBy) addedByMap[v.createdBy] = (addedByMap[v.createdBy]||0)+1;
+    });
+
+    const roleColors = {
+      admin:  { bg:"#FFEBEE", color:"#C62828", label:"Admin"  },
+      editor: { bg:"#E3F2FD", color:"#1565C0", label:"Editor" },
+      viewer: { bg:"#F3E5F5", color:"#6A1B9A", label:"Viewer" }
+    };
+    const avatarColors = ["#2E7D32","#1565C0","#C62828","#6A1B9A","#E65100","#00695C"];
+
+    container.innerHTML = `<div class="users-grid">` +
+      filteredUsers.map((u, i) => {
+        const initial   = (u.name||"?").charAt(0).toUpperCase();
+        const rc        = roleColors[u.role] || roleColors.viewer;
+        const avatarBg  = avatarColors[i % avatarColors.length];
+        const isMe      = u.id === localStorage.getItem("userUID");
+        const addedCount = addedByMap[u.id] || 0;
+        const createdAt  = u.createdAt
+          ? (u.createdAt.toDate
+              ? u.createdAt.toDate().toLocaleDateString("en-IN",
+                  {day:"2-digit",month:"short",year:"numeric"})
+              : "–")
+          : "–";
+
+        return `
+          <div class="user-card">
+            <div class="user-card-avatar" style="background:${avatarBg};">
+              ${initial}
+            </div>
+            <div class="user-card-body">
+              <div class="user-card-name">
+                ${u.name||"Unknown"}
+                ${isMe
+                  ? `<span class="badge badge-green"
+                      style="font-size:11px;margin-left:6px;">You</span>`
+                  : ""}
+              </div>
+              <div class="user-card-email">${u.email||"–"}</div>
+              <div class="user-card-meta">
+                <span class="badge"
+                  style="background:${rc.bg};color:${rc.color};">
+                  ${rc.label}
+                </span>
+                <span style="font-size:12px;color:var(--text-muted);">
+                  📅 Joined: ${createdAt}
+                </span>
+              </div>
+            </div>
+            <div class="user-card-stats">
+              <div class="ucs-item">
+                <div class="ucs-val">${addedCount}</div>
+                <div class="ucs-label">Visitors<br>Added</div>
+              </div>
+            </div>
+            ${userRole==="admin" && !isMe
+              ? `<div onclick="event.stopPropagation()">
+                  <a href="settings.html" class="btn btn-ghost btn-sm"
+                    title="Manage in Settings">⚙️</a>
+                </div>`
+              : ""}
+          </div>`;
+      }).join("") + `</div>`;
+  }
+
+  // ── Delete ───────────────────────────────────────
   window.openDeleteModal = function (id, name) {
     deleteTargetId = id;
     document.getElementById("deleteVisitorName").textContent = name;
     document.getElementById("deleteModal").classList.remove("hidden");
   };
-
   window.closeDeleteModal = function () {
     deleteTargetId = null;
     document.getElementById("deleteModal").classList.add("hidden");
   };
-
   window.confirmDelete = async function () {
     if (!deleteTargetId) return;
     const btn = document.getElementById("confirmDeleteBtn");
@@ -434,7 +686,8 @@ const firebaseConfig = {
       allVisitors = allVisitors.filter(v => v.id !== deleteTargetId);
       applyFilters();
       closeDeleteModal();
-      showToast("Visitor deleted successfully", "success");
+      showToast("Visitor deleted ✅", "success");
+      document.getElementById("visitorCountBadge").textContent = allVisitors.length;
     } catch (err) {
       showToast("Delete failed: " + err.message, "error");
       btn.disabled = false;
@@ -442,39 +695,43 @@ const firebaseConfig = {
     }
   };
 
-  // ── Logout + Sidebar ────────────────────────────
-  window.handleLogout = async function () {
-    await signOut(auth);
-    localStorage.clear();
-    window.location.href = "index.html";
+  // ── Tab Switch ───────────────────────────────────
+  window.switchPageTab = function (tab) {
+    document.querySelectorAll(".page-tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add("active");
+    document.getElementById(`content${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add("active");
   };
-  window.openSidebar  = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarOverlay").classList.add("open"); };
-  window.closeSidebar = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarOverlay").classList.remove("open"); };
+
+  // ── Logout + Sidebar ─────────────────────────────
+  window.handleLogout = async () => {
+    await signOut(auth); localStorage.clear(); window.location.href = "index.html";
+  };
+  window.openSidebar  = () => {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+  };
+  window.closeSidebar = () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+  };
 </script>
 
 <script>
   document.head.insertAdjacentHTML("beforeend","<style>.hidden{display:none!important}</style>");
   function showToast(msg, type="info", dur=4000) {
-    const c = document.getElementById("toastContainer");
-    const t = document.createElement("div");
-    const icons = {success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
-    t.className = `toast ${type}`;
-    t.innerHTML = `<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
-    c.appendChild(t);
-    setTimeout(()=>t.remove(), dur);
+    const c=document.getElementById("toastContainer"),t=document.createElement("div");
+    const icons={success:"✅",error:"❌",warning:"⚠️",info:"ℹ️"};
+    t.className=`toast ${type}`;
+    t.innerHTML=`<span>${icons[type]||"ℹ️"}</span><span>${msg}</span>`;
+    c.appendChild(t);setTimeout(()=>t.remove(),dur);
   }
 </script>
 
-<!-- PWA Registration -->
 <script>
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[PWA] Service Worker registered:", reg.scope))
-        .catch(err => console.warn("[PWA] SW registration failed:", err));
-    });
+    window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
   }
 </script>
-
 </body>
 </html>
